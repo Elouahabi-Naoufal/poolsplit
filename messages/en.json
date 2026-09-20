@@ -243,7 +243,7 @@
     "uploadPic": "Upload picture",
     "changePic": "Change picture",
     "removePic": "Remove",
-    "picHint": "JPG or PNG, under 500 KB.",
+    "picHint": "JPG or PNG, under 3 MB.",
     "language": "Language",
     "languageHint": "Applies immediately and is remembered on this device."
   },

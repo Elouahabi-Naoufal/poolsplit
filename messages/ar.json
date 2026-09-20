@@ -241,7 +241,7 @@
     "uploadPic": "رفع صورة",
     "changePic": "تغيير الصورة",
     "removePic": "إزالة",
-    "picHint": "JPG أو PNG، أقل من 500 KB.",
+    "picHint": "JPG أو PNG، أقل من 3 MB.",
     "language": "اللغة",
     "languageHint": "تُطبّق فوراً وتبقى محفوظة على هذا الجهاز."
   },
@@ -354,7 +354,7 @@
     "updateProductFailed": "تعذّر تعديل هذا المنتج. حاول مجدداً.",
     "acceptInviteFailed": "تعذّر قبول هذه الدعوة. حاول مجدداً.",
     "avatarImageOnly": "يجب أن تكون الصورة ملف صورة.",
-    "avatarTooBig": "يجب أن تكون الصورة أقل من 500 KB.",
+    "avatarTooBig": "يجب أن تكون صورة الملف الشخصي أقل من 3 MB. حاول التقاط لقطة شاشة للصورة ورفعها بدلاً من ذلك.",
     "invalidCredentials": "بيانات الدخول غير صحيحة.",
     "invalidInput": "إدخال غير صالح.",
     "userExists": "يوجد مستخدم بهذا الاسم.",

@@ -242,7 +242,7 @@
     "uploadPic": "Ajouter une photo",
     "changePic": "Changer de photo",
     "removePic": "Retirer",
-    "picHint": "JPG ou PNG, moins de 500 Ko.",
+    "picHint": "JPG ou PNG, moins de 3 Mo.",
     "language": "Langue",
     "languageHint": "S'applique immédiatement et reste mémorisée sur cet appareil."
   },
@@ -355,7 +355,7 @@
     "updateProductFailed": "Impossible de modifier ce produit. Réessaie.",
     "acceptInviteFailed": "Impossible d'accepter cette invitation. Réessaie.",
     "avatarImageOnly": "La photo de profil doit être un fichier image.",
-    "avatarTooBig": "La photo doit faire moins de 500 Ko.",
+    "avatarTooBig": "La photo de profil doit faire moins de 3 Mo. Essayez de faire une capture d'écran de l'image et de téléverser celle-ci.",
     "invalidCredentials": "Identifiants invalides.",
     "invalidInput": "Saisie invalide.",
     "userExists": "Un utilisateur avec ce pseudo existe déjà.",
