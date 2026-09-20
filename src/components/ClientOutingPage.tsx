@@ -73,11 +73,10 @@ function WForm({ action, initialState, children, className, confirmMessage }: {
   );
 }
 
-function SubmitBtn({ label, pending, variant = "primary" }: { label: string; pending?: boolean; variant?: "primary" | "danger" | "ghost" }) {
-  const cls = variant === "primary" ? "btn-primary" : variant === "danger" ? "btn-primary" : "btn-ghost";
-  const dangerStyle = variant === "danger" ? { background: "var(--danger)" } as React.CSSProperties : undefined;
+function SubmitBtn({ label, pending, variant = "primary" }: { label: string; pending?: boolean; variant?: "primary" | "danger" | "ghost" | "warn" }) {
+  const cls = variant === "primary" ? "btn-primary" : variant === "danger" ? "btn-danger-solid" : variant === "warn" ? "btn-warn" : "btn-ghost";
   return (
-    <button type="submit" disabled={pending} className={cls} style={dangerStyle}>
+    <button type="submit" disabled={pending} className={cls}>
       {pending ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" /> : null}
       {label}
     </button>
@@ -448,10 +447,10 @@ function ActivityCard({ activity, outingId, groupId, isOwner, participants, user
             {canEdit && (
               <>
                 <WForm action={async () => await closeActivityAction(activity.id)} initialState={{}}>
-                  <SubmitBtn label={tc("close")} variant="ghost" />
+                  <SubmitBtn label={tc("close")} variant="warn" />
                 </WForm>
                 <WForm action={async () => await deleteActivityAction(activity.id)} initialState={{}} confirmMessage="Delete this activity forever?">
-                  <SubmitBtn label={tc("delete")} variant="ghost" />
+                  <SubmitBtn label={tc("delete")} variant="danger" />
                 </WForm>
               </>
             )}

@@ -424,6 +424,45 @@ summary:focus-visible {
 }
 .btn-danger-ghost:hover { background: var(--danger-subtle); }
 
+.btn-warn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 7px 14px;
+  border-radius: var(--radius-input);
+  background: var(--warn-subtle);
+  color: var(--warn);
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  min-height: 36px;
+  transition: background 150ms ease, color 150ms ease;
+}
+.btn-warn:hover { background: color-mix(in srgb, var(--warn) 14%, white); color: var(--warn); }
+.btn-warn:disabled { opacity: 0.55; cursor: wait; }
+
+.btn-danger-solid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 7px 14px;
+  border-radius: var(--radius-input);
+  background: var(--danger);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  min-height: 36px;
+  transition: background 150ms ease, transform 120ms ease;
+}
+.btn-danger-solid:hover { background: color-mix(in srgb, var(--danger) 82%, black); }
+.btn-danger-solid:active { transform: scale(0.98); }
+.btn-danger-solid:disabled { opacity: 0.55; cursor: wait; }
+
 /* ---------- Inputs ---------- */
 .input {
   width: 100%;
