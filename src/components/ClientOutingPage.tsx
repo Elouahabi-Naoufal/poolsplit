@@ -61,34 +61,40 @@ function ProductsSection({ activity, canEdit }: { activity: any; canEdit: boolea
       {activity.products.length > 0 && (
         <div>
           <div className="text-[12px] font-semibold text-muted mb-2 uppercase tracking-wide">{t("products")}</div>
-          <div className="space-y-1.5">
-            {activity.products.map((p: any) => (
-              <div key={p.id} className="flex items-center justify-between py-2 px-3 rounded-[12px] bg-elevated">
-                <span className="text-[14px] min-w-0">{p.name} <span className="text-muted">· {formatDH(p.pricePerUnitCt)}/{p.unit}</span></span>
-                {canEdit && (
-                  <div className="flex items-center gap-1.5 flex-shrink-0 ms-2">
-                    <EditDropdown align="end">
-                      <WForm action={async (prevState, formData) => {
-                        return await updateActivityProductAction(p.id, {
-                          name: formData.get("name") as string || undefined,
-                          unit: formData.get("unit") as string || undefined,
-                          pricePerUnitDH: formData.get("pricePerUnitDH") as string || undefined,
-                        });
-                      }} initialState={{}} className="space-y-2 w-56">
-                        <input name="name" defaultValue={p.name} placeholder={t("namePh")} className="input text-[13px]" />
-                        <input name="unit" defaultValue={p.unit} placeholder={t("unitLabel")} className="input text-[13px]" />
-                        <input name="pricePerUnitDH" defaultValue={(p.pricePerUnitCt / 100).toFixed(2)} placeholder={t("pricePh")} className="input text-[13px]" />
-                        <SubmitBtn label={tc("save")} />
+          <details className="group rounded-[16px] border border-border overflow-hidden">
+            <summary className="flex items-center justify-between gap-2 px-3.5 py-2.5 cursor-pointer text-[14px] font-medium">
+              <span className="min-w-0">{t("products")} · {activity.products.length}</span>
+              <IconChevronDown size={16} className="text-muted flex-shrink-0 transition-transform duration-200 group-open:rotate-180" />
+            </summary>
+            <div className="border-t border-border px-2 py-1.5 space-y-1">
+              {activity.products.map((p: any) => (
+                <div key={p.id} className="flex items-center justify-between py-1.5 px-2.5 rounded-[10px] hover:bg-elevated/70">
+                  <span className="text-[13px] min-w-0">{p.name} <span className="text-muted">· {formatDH(p.pricePerUnitCt)}/{p.unit}</span></span>
+                  {canEdit && (
+                    <div className="flex items-center gap-1.5 flex-shrink-0 ms-2">
+                      <EditDropdown align="end">
+                        <WForm action={async (prevState, formData) => {
+                          return await updateActivityProductAction(p.id, {
+                            name: formData.get("name") as string || undefined,
+                            unit: formData.get("unit") as string || undefined,
+                            pricePerUnitDH: formData.get("pricePerUnitDH") as string || undefined,
+                          });
+                        }} initialState={{}} className="space-y-2 w-56">
+                          <input name="name" defaultValue={p.name} placeholder={t("namePh")} className="input text-[13px]" />
+                          <input name="unit" defaultValue={p.unit} placeholder={t("unitLabel")} className="input text-[13px]" />
+                          <input name="pricePerUnitDH" defaultValue={(p.pricePerUnitCt / 100).toFixed(2)} placeholder={t("pricePh")} className="input text-[13px]" />
+                          <SubmitBtn label={tc("save")} />
+                        </WForm>
+                      </EditDropdown>
+                      <WForm action={async () => await deleteActivityProductAction(p.id)} initialState={{}} confirmMessage={t("delProduct")} confirmLabel={tc("confirm")} cancelLabel={tc("cancel")}>
+                        <button type="submit" aria-label={t("deleteItem", { name: p.name })} className="inline-flex items-center text-danger/60 hover:text-danger transition-colors"><IconX size={13} /></button>
                       </WForm>
-                    </EditDropdown>
-                    <WForm action={async () => await deleteActivityProductAction(p.id)} initialState={{}} confirmMessage={t("delProduct")} confirmLabel={tc("confirm")} cancelLabel={tc("cancel")}>
-                      <button type="submit" aria-label={t("deleteItem", { name: p.name })} className="inline-flex items-center text-danger/60 hover:text-danger transition-colors"><IconX size={12} /></button>
-                    </WForm>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </details>
         </div>
       )}
       {canEdit && (
