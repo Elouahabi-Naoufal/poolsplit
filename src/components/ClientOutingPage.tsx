@@ -84,6 +84,109 @@ function SubmitBtn({ label, pending, variant = "primary" }: { label: string; pen
   );
 }
 
+function EditDropdown({ children, align = "end" }: { children: React.ReactNode; align?: "start" | "end" }) {
+  const tc = useTranslations("common");
+  return (
+    <details className="relative">
+      <summary className="cursor-pointer text-brand text-[12px] font-semibold hover:underline">{tc("edit")}</summary>
+      <div className={`absolute ${align === "end" ? "end-0" : "start-0"} z-40 mt-1.5 p-3 rounded-[16px] bg-surface border border-border shadow-lg max-w-[calc(100vw-3rem)]`}>
+        {children}
+      </div>
+    </details>
+  );
+}
+
+function ProductsSection({ activity, canEdit }: { activity: any; canEdit: boolean }) {
+  const t = useTranslations("outing");
+  const tc = useTranslations("common");
+  return (
+    <div className="space-y-3">
+      {activity.products.length > 0 && (
+        <div>
+          <div className="text-[12px] font-semibold text-muted mb-2 uppercase tracking-wide">{t("products")}</div>
+          <div className="space-y-1.5">
+            {activity.products.map((p: any) => (
+              <div key={p.id} className="flex items-center justify-between py-2 px-3 rounded-[12px] bg-elevated">
+                <span className="text-[14px] min-w-0">{p.name} <span className="text-muted">· {formatDH(p.pricePerUnitCt)}/{p.unit}</span></span>
+                {canEdit && (
+                  <div className="flex items-center gap-1.5 flex-shrink-0 ms-2">
+                    <EditDropdown align="end">
+                      <WForm action={async (prevState, formData) => {
+                        return await updateActivityProductAction(p.id, {
+                          name: formData.get("name") as string || undefined,
+                          unit: formData.get("unit") as string || undefined,
+                          pricePerUnitDH: formData.get("pricePerUnitDH") as string || undefined,
+                        });
+                      }} initialState={{}} className="space-y-2 w-56">
+                        <input name="name" defaultValue={p.name} placeholder={t("namePh")} className="input text-[13px]" />
+                        <input name="unit" defaultValue={p.unit} placeholder={t("unitLabel")} className="input text-[13px]" />
+                        <input name="pricePerUnitDH" defaultValue={(p.pricePerUnitCt / 100).toFixed(2)} placeholder={t("pricePh")} className="input text-[13px]" />
+                        <SubmitBtn label={tc("save")} />
+                      </WForm>
+                    </EditDropdown>
+                    <WForm action={async () => await deleteActivityProductAction(p.id)} initialState={{}} confirmMessage="Delete this product?">
+                      <button type="submit" aria-label={t("deleteItem", { name: p.name })} className="inline-flex items-center text-danger/60 hover:text-danger transition-colors"><IconX size={12} /></button>
+                    </WForm>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {canEdit && (
+        <details className="rounded-[20px] border border-border p-3.5">
+          <summary className="flex items-center gap-1 text-[13px] cursor-pointer text-muted font-semibold"><IconChevronRight size={13} className="chev" /> {t("addProduct")}</summary>
+          <WForm action={async (prevState, formData) => await createActivityProductAction(formData)} initialState={{}} className="space-y-2.5 mt-3">
+            <input type="hidden" name="activityId" value={activity.id} />
+            <input name="name" placeholder={t("productNamePh")} required className="input text-[13px]" />
+            <input name="unit" placeholder={t("unitPh")} className="input text-[13px]" />
+            <input name="pricePerUnitDH" placeholder={t("pricePh")} required className="input text-[13px]" />
+            <SubmitBtn label={t("addProductBtn")} />
+          </WForm>
+        </details>
+      )}
+    </div>
+  );
+}
+
+function AddItemForm({ activity, userId, summary, descriptionPh }: {
+  activity: any; userId: string; summary: string; descriptionPh: string;
+}) {
+  const t = useTranslations("outing");
+  const [productId, setProductId] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const onPick = (value: string) => {
+    setProductId(value);
+    const p = activity.products.find((pp: any) => pp.id === value);
+    if (p) {
+      setDescription(p.name);
+      setPrice((p.pricePerUnitCt / 100).toFixed(2));
+    }
+  };
+  return (
+    <details className="rounded-[20px] border border-border p-3.5">
+      <summary className="flex items-center gap-1 text-[13px] cursor-pointer text-muted font-semibold"><IconChevronRight size={13} className="chev" /> {summary}</summary>
+      <WForm action={async (prevState, formData) => await createLineItemAction(formData)} initialState={{}} className="space-y-2.5 mt-3">
+        <input type="hidden" name="activityId" value={activity.id} />
+        <input type="hidden" name="userId" value={userId} />
+        {activity.products.length > 0 && (
+          <select value={productId} onChange={(e) => onPick(e.target.value)} className="input text-[13px]">
+            <option value="">{t("selectProduct")}</option>
+            {activity.products.map((p: any) => (
+              <option key={p.id} value={p.id}>{p.name} ({formatDH(p.pricePerUnitCt)}/{p.unit})</option>
+            ))}
+          </select>
+        )}
+        <input name="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={descriptionPh} required className="input text-[13px]" />
+        <input name="priceDH" value={price} onChange={(e) => setPrice(e.target.value)} placeholder={t("priceItemPh")} required className="input text-[13px]" />
+        <SubmitBtn label={t("addItemBtn")} />
+      </WForm>
+    </details>
+  );
+}
+
 function SplitBar({ paid, responsibility }: { paid: number; responsibility: number }) {
   const t = useTranslations("outing");
   const max = Math.max(paid, responsibility, 1);
@@ -319,9 +422,9 @@ function ActivityCard({ activity, outingId, groupId, isOwner, participants, user
   const canEdit = isOwner && activity.status === "OPEN";
 
   return (
-    <div className="card-elevated overflow-hidden">
+    <div className="card-elevated">
       {/* Clickable header — always visible */}
-      <button onClick={onToggle} className="w-full text-start p-5 hover:bg-elevated/50 transition-colors cursor-pointer">
+      <button onClick={onToggle} className={`w-full text-start p-5 hover:bg-elevated/50 overflow-hidden transition-colors cursor-pointer ${expanded ? "rounded-t-[20px]" : "rounded-[20px]"}`}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
@@ -374,53 +477,7 @@ function ActivityCard({ activity, outingId, groupId, isOwner, participants, user
           )}
           {isFixed && (
             <div className="space-y-4">
-              {activity.products.length > 0 && (
-                <div>
-                  <div className="text-[12px] font-semibold text-muted mb-2 uppercase tracking-wide">{t("products")}</div>
-                  <div className="space-y-1.5">
-                    {activity.products.map((p: any) => (
-                      <div key={p.id} className="flex items-center justify-between py-2 px-3 rounded-[12px] bg-elevated">
-                        <span className="text-[14px] min-w-0">{p.name} <span className="text-muted">· {formatDH(p.pricePerUnitCt)}/{p.unit}</span></span>
-                        {canEdit && (
-                          <div className="flex items-center gap-1.5 flex-shrink-0 ms-2">
-                            <details className="relative">
-                              <summary className="cursor-pointer text-brand text-[12px] font-semibold hover:underline">{tc("edit")}</summary>
-                              <WForm action={async (prevState, formData) => {
-                                return await updateActivityProductAction(p.id, {
-                                  name: formData.get("name") as string || undefined,
-                                  unit: formData.get("unit") as string || undefined,
-                                  pricePerUnitDH: formData.get("pricePerUnitDH") as string || undefined,
-                                });
-                              }} initialState={{}} className="absolute end-0 z-10 mt-1 p-3 rounded-[20px] bg-surface border border-border shadow-lg space-y-2 w-56">
-                                <input name="name" defaultValue={p.name} placeholder={t("namePh")} className="input text-[13px]" />
-                                <input name="unit" defaultValue={p.unit} placeholder={t("unitLabel")} className="input text-[13px]" />
-                                <input name="pricePerUnitDH" defaultValue={(p.pricePerUnitCt / 100).toFixed(2)} placeholder={t("pricePh")} className="input text-[13px]" />
-                                <SubmitBtn label={tc("save")} />
-                              </WForm>
-                            </details>
-                            <WForm action={async () => await deleteActivityProductAction(p.id)} initialState={{}} confirmMessage="Delete this product?">
-                              <button type="submit" aria-label={t("deleteItem", { name: p.name })} className="inline-flex items-center text-danger/60 hover:text-danger transition-colors"><IconX size={12} /></button>
-                            </WForm>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {canEdit && (
-                <details className="rounded-[20px] border border-border p-3.5">
-                  <summary className="flex items-center gap-1 text-[13px] cursor-pointer text-muted font-semibold"><IconChevronRight size={13} className="chev" /> {t("addProduct")}</summary>
-                  <WForm action={async (prevState, formData) => await createActivityProductAction(formData)} initialState={{}} className="space-y-2.5 mt-3">
-                    <input type="hidden" name="activityId" value={activity.id} />
-                    <input name="name" placeholder={t("productNamePh")} required className="input text-[13px]" />
-                    <input name="unit" placeholder={t("unitPh")} className="input text-[13px]" />
-                    <input name="pricePerUnitDH" placeholder={t("pricePh")} required className="input text-[13px]" />
-                    <SubmitBtn label={t("addProductBtn")} />
-                  </WForm>
-                </details>
-              )}
-
+              <ProductsSection activity={activity} canEdit={canEdit} />
               {activity.usageRecords.length > 0 && (
                 <div>
                   <div className="text-[12px] font-semibold text-muted mb-2 uppercase tracking-wide">{t("usage")}</div>
@@ -477,16 +534,15 @@ function ActivityCard({ activity, outingId, groupId, isOwner, participants, user
                           )}
                           {canEdit && (
                             <div className="flex gap-2 items-center pt-1">
-                              <details className="relative">
-                                <summary className="cursor-pointer text-brand text-[12px] font-semibold hover:underline">{tc("edit")}</summary>
+                              <EditDropdown align="start">
                                 <WForm action={async (prevState, formData) => {
                                   const qty = parseInt(formData.get("quantity") as string, 10);
                                   return await updateUsageRecordAction(r.id, { quantity: qty });
-                                }} initialState={{}} className="absolute start-0 z-10 mt-1 p-3 rounded-[20px] bg-surface border border-border shadow-lg flex gap-2 items-center">
+                                }} initialState={{}} className="flex gap-2 items-center">
                                   <input name="quantity" type="number" min="1" defaultValue={r.quantity} className="input text-[13px] w-20" />
                                   <SubmitBtn label={tc("save")} />
                                 </WForm>
-                              </details>
+                              </EditDropdown>
                               <WForm action={async () => await deleteUsageRecordAction(r.id)} initialState={{}} confirmMessage="Delete this usage record?">
                                 <button type="submit" className="text-[12px] text-danger hover:underline">{tc("delete")}</button>
                               </WForm>
@@ -526,6 +582,7 @@ function ActivityCard({ activity, outingId, groupId, isOwner, participants, user
 
           {isVariable && (
             <div className="space-y-3">
+              <ProductsSection activity={activity} canEdit={canEdit} />
               {activity.lineItems.length > 0 && (
                 <div>
                   <div className="text-[12px] font-semibold text-muted mb-2 uppercase tracking-wide">{t("items")}</div>
@@ -544,19 +601,18 @@ function ActivityCard({ activity, outingId, groupId, isOwner, participants, user
                           </div>
                           {canEditItem && canEdit && (
                             <div className="flex items-center gap-1.5">
-                              <details className="relative">
-                                <summary className="cursor-pointer text-brand text-[12px] font-semibold hover:underline">{tc("edit")}</summary>
+                              <EditDropdown align="end">
                                 <WForm action={async (prevState, formData) => {
                                   return await updateLineItemAction(l.id, {
                                     description: formData.get("description") as string || undefined,
                                     priceDH: formData.get("priceDH") as string || undefined,
                                   });
-                                }} initialState={{}} className="absolute end-0 z-10 mt-1 p-3 rounded-[20px] bg-surface border border-border shadow-lg space-y-2 w-56">
+                                }} initialState={{}} className="space-y-2 w-56">
                                   <input name="description" defaultValue={l.description} placeholder={t("descPh")} className="input text-[13px]" />
                                   <input name="priceDH" defaultValue={(l.priceCentimes / 100).toFixed(2)} placeholder={t("priceItemPh")} className="input text-[13px]" />
                                   <SubmitBtn label={tc("save")} />
                                 </WForm>
-                              </details>
+                              </EditDropdown>
                               <WForm action={async () => await deleteLineItemAction(l.id)} initialState={{}} confirmMessage="Delete this item?">
                                 <button type="submit" aria-label={t("deleteItem", { name: l.description })} className="inline-flex items-center text-danger/60 hover:text-danger transition-colors"><IconX size={12} /></button>
                               </WForm>
@@ -570,28 +626,10 @@ function ActivityCard({ activity, outingId, groupId, isOwner, participants, user
               )}
               {activity.lineItems.length === 0 && <div className="text-[13px] text-muted italic">{t("noItems")}</div>}
               {canEdit && (
-                <details className="rounded-[20px] border border-border p-3.5">
-                  <summary className="flex items-center gap-1 text-[13px] cursor-pointer text-muted font-semibold"><IconChevronRight size={13} className="chev" /> {t("addItem")}</summary>
-                  <WForm action={async (prevState, formData) => await createLineItemAction(formData)} initialState={{}} className="space-y-2.5 mt-3">
-                    <input type="hidden" name="activityId" value={activity.id} />
-                    <input type="hidden" name="userId" defaultValue={userId} className="hidden" />
-                    <input name="description" placeholder={t("descPh")} required className="input text-[13px]" />
-                    <input name="priceDH" placeholder={t("priceItemPh")} required className="input text-[13px]" />
-                    <SubmitBtn label={t("addItemBtn")} />
-                  </WForm>
-                </details>
+                <AddItemForm activity={activity} userId={userId} summary={t("addItem")} descriptionPh={t("descPh")} />
               )}
               {!isOwner && activity.status === "OPEN" && (
-                <details className="rounded-[20px] border border-border p-3.5">
-                  <summary className="flex items-center gap-1 text-[13px] cursor-pointer text-muted font-semibold"><IconChevronRight size={13} className="chev" /> {t("addMyItem")}</summary>
-                  <WForm action={async (prevState, formData) => await createLineItemAction(formData)} initialState={{}} className="space-y-2.5 mt-3">
-                    <input type="hidden" name="activityId" value={activity.id} />
-                    <input type="hidden" name="userId" value={userId} className="hidden" />
-                    <input name="description" placeholder={t("descMinePh")} required className="input text-[13px]" />
-                    <input name="priceDH" placeholder={t("priceItemPh")} required className="input text-[13px]" />
-                    <SubmitBtn label={t("addItemBtn")} />
-                  </WForm>
-                </details>
+                <AddItemForm activity={activity} userId={userId} summary={t("addMyItem")} descriptionPh={t("descMinePh")} />
               )}
             </div>
           )}
@@ -608,15 +646,14 @@ function ActivityCard({ activity, outingId, groupId, isOwner, participants, user
                       <span className="money text-[15px] font-semibold">{formatDH(p.amountCentimes)}</span>
                       {canEdit && (
                         <span className="flex items-center gap-1">
-                          <details className="relative">
-                            <summary className="cursor-pointer text-brand text-[12px] font-semibold hover:underline">{tc("edit")}</summary>
+                          <EditDropdown align="end">
                             <WForm action={async (prevState, formData) => {
                               return await updateActivityPaymentAction(p.id, formData.get("amountDH") as string);
-                            }} initialState={{}} className="absolute end-0 z-10 mt-1 p-3 rounded-[20px] bg-surface border border-border shadow-lg flex gap-2 items-center">
+                            }} initialState={{}} className="flex gap-2 items-center">
                               <input name="amountDH" defaultValue={(p.amountCentimes / 100).toFixed(2)} placeholder={t("amountPh")} className="input text-[13px] w-24" />
                               <SubmitBtn label={tc("save")} />
                             </WForm>
-                          </details>
+                          </EditDropdown>
                           <WForm action={async () => await deleteActivityPaymentAction(p.id)} initialState={{}} confirmMessage="Delete this payment?">
                             <button type="submit" aria-label={t("deletePayment")} className="inline-flex items-center text-danger/60 hover:text-danger transition-colors"><IconX size={12} /></button>
                           </WForm>

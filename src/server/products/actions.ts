@@ -7,7 +7,7 @@ import { userError } from "@/lib/errors";
 import { getTranslations } from "next-intl/server";
 
 /**
- * Create a product for a fixed-price activity.
+ * Create a product for an activity (fixed or variable pricing).
  * Only outing owner can create products.
  */
 export async function createActivityProductAction(formData: FormData) {
@@ -24,7 +24,6 @@ export async function createActivityProductAction(formData: FormData) {
 
   const activity = await prisma.activity.findUnique({ where: { id: activityId } });
   if (!activity) return { error: t("activityNotFound") };
-  if (activity.pricingModel !== "FIXED") return { error: t("fixedOnlyProducts") };
 
   const outing = await prisma.outing.findUnique({ where: { id: activity.outingId! } });
   if (!outing) return { error: t("outingNotFound") };
