@@ -21,7 +21,7 @@ ${indent}    "undefined" !== typeof document &&
 ${indent}    null !== document &&
 ${indent}    ("loading" === document.readyState ||
 ${indent}      ("undefined" !== typeof window &&
-${indent}        null !== window.$RB &&
+${indent}        null != window.$RB &&
 ${indent}        0 < window.$RB.length))
 ${indent}  ) {
 ${indent}    isMessageLoopRunning && localSetTimeout(performWorkUntilDeadline, 8);
@@ -39,8 +39,17 @@ for (const rel of files) {
     console.log(`skip (missing): ${rel}`);
     continue;
   }
+  // `null != window.$RB` is intentional (loose): it must also be false when
+  // `window.$RB` is `undefined`, otherwise reading `.length` throws inside the
+  // work loop and breaks hydration (react/react#37321 verified snippet).
   if (src.includes("window.$RB")) {
-    console.log(`skip (already patched): ${rel}`);
+    const fixed = src.replaceAll("null !== window.$RB", "null != window.$RB");
+    if (fixed !== src) {
+      writeFileSync(abs, fixed);
+      console.log(`repaired comparison: ${rel}`);
+    } else {
+      console.log(`skip (already patched): ${rel}`);
+    }
     continue;
   }
   const marker = /([\t ]*)function performWorkUntilDeadline\(\)\s*\{/;
