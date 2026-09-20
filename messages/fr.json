@@ -436,7 +436,8 @@
     "templateProductMissing": "Produit introuvable dans le modèle.",
     "groupAdminOnlyTemplates": "Les modèles ne peuvent être utilisés que par l’admin du groupe.",
     "groupImageOnly": "L’image du groupe doit être un fichier image.",
-    "groupImageTooBig": "L’image du groupe doit faire moins de {maxMB} Mo."
+    "groupImageTooBig": "L’image du groupe doit faire moins de {maxMB} Mo.",
+    "usageMerged": "Fusionné avec l’enregistrement {product} existant : +{qty} ajouté"
   },
   "templates": {
     "title": "Modèles d’activités",

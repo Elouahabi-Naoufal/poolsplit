@@ -435,7 +435,8 @@
     "templateProductMissing": "المنتج غير موجود في النموذج.",
     "groupAdminOnlyTemplates": "لا يمكن استخدام النماذج إلا من طرف مسؤول المجموعة.",
     "groupImageOnly": "يجب أن تكون خلفية المجموعة ملف صورة.",
-    "groupImageTooBig": "يجب أن تكون صورة المجموعة أقل من {maxMB} ميجا."
+    "groupImageTooBig": "يجب أن تكون صورة المجموعة أقل من {maxMB} ميجا.",
+    "usageMerged": "تم الدمج مع سجل {product} الموجود: +{qty} تمت إضافتها"
   },
   "templates": {
     "title": "نماذج الأنشطة",

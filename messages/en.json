@@ -437,7 +437,8 @@
     "templateProductMissing": "Product not found in template.",
     "groupAdminOnlyTemplates": "Templates can only be used by the admin of the group.",
     "groupImageOnly": "Group image must be an image file.",
-    "groupImageTooBig": "Group image must be under {maxMB} MB."
+    "groupImageTooBig": "Group image must be under {maxMB} MB.",
+    "usageMerged": "Merged with the existing {product} record: +{qty} added"
   },
   "templates": {
     "title": "Activity templates",

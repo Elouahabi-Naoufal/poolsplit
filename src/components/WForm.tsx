@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useEffect, useRef, useState } from "react";
 
-type AR = { error?: string; success?: boolean };
+type AR = { error?: string; success?: boolean; message?: string };
 
 const CONFIRM_MS = 5000;
 const TICK = 80;
@@ -26,9 +26,18 @@ export default function WForm({
   const [state, formAction, pending] = useActionState(action, initialState);
   const [confirming, setConfirming] = useState(false);
   const [leftMs, setLeftMs] = useState(CONFIRM_MS);
+  const [notice, setNotice] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startedAtRef = useRef(0);
   const submittedRef = useRef(false);
+
+  useEffect(() => {
+    if (state && state.success && state.message) {
+      setNotice(state.message);
+      const id = setTimeout(() => setNotice(null), 3000);
+      return () => clearTimeout(id);
+    }
+  }, [state]);
 
   useEffect(() => {
     return () => {
@@ -89,6 +98,9 @@ export default function WForm({
         <span className="inline-block w-4 h-4 border-2 border-border border-t-brand rounded-full animate-spin ms-1 align-middle" />
       )}
       {state && state.error && <div className="mt-1.5 text-[12px] text-danger">{state.error}</div>}
+      {notice && (
+        <div className="mt-1.5 text-[12px] text-success animate-in">{notice}</div>
+      )}
       {confirming && confirmMessage && (
         <div className="fixed bottom-6 inset-x-0 z-[100] px-4 pointer-events-none">
           <div className="mx-auto max-w-[360px] pointer-events-auto rounded-[16px] bg-surface border border-border shadow-xl p-3.5 space-y-3 animate-in">

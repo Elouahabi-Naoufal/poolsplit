@@ -60,6 +60,44 @@ export async function createUsageRecordAction(formData: FormData) {
 
   const totalCentimes = product.pricePerUnitCt * quantity;
 
+  // Merge into an existing PENDING record when the same product is used again
+  // by the exact same set of participants: bump quantity and total instead of
+  // stacking another row. Confirmed/disputed records are never touched.
+  const participantKey = (ids: string[]) => [...new Set(ids)].sort().join("|");
+  const existingPending = await prisma.usageRecord.findMany({
+    where: { activityId, productId, status: "PENDING" },
+    include: { participants: { select: { userId: true } } },
+  });
+  const mergeTarget = existingPending.find(
+    r => participantKey(r.participants.map(p => p.userId)) === participantKey(participantIds)
+  );
+
+  if (mergeTarget) {
+    await prisma.usageRecord.update({
+      where: { id: mergeTarget.id },
+      data: {
+        quantity: mergeTarget.quantity + quantity,
+        totalCentimes: mergeTarget.totalCentimes + totalCentimes,
+      },
+    });
+    await logEvent({
+      groupId: outing.groupId,
+      outingId: activity.outingId!,
+      actorId: session.userId,
+      eventType: "USAGE_RECORD_CREATED",
+      entityType: "UsageRecord",
+      entityId: mergeTarget.id,
+      metadata: { product: product.name, quantity, totalCentimes, participants: participantIds.length, merged: true },
+    });
+    revalidatePath(`/groups/${outing.groupId}/outings/${activity.outingId}`);
+    return {
+      success: true,
+      id: mergeTarget.id,
+      merged: true,
+      message: t("usageMerged", { product: product.name, qty: quantity }),
+    };
+  }
+
   const usageRecord = await prisma.usageRecord.create({
     data: {
       activityId,
