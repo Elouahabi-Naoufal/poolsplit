@@ -192,7 +192,15 @@
     "unitLabel": "Unité",
     "useTemplate": "Utiliser un modèle",
     "selectTemplate": "Choisir un modèle…",
-    "saveTemplate": "Enregistrer comme modèle"
+    "saveTemplate": "Enregistrer comme modèle",
+    "searchTemplates": "Rechercher un modèle… (tapez pour filtrer)",
+    "clearSearch": "Effacer la recherche de modèle",
+    "noTemplateMatches": "Aucun modèle ne correspond à votre recherche.",
+    "delProduct": "Supprimer ce produit ?",
+    "delActivity": "Supprimer cette activité définitivement ?",
+    "delUsage": "Supprimer cet enregistrement d’utilisation ?",
+    "delItem": "Supprimer cet article ?",
+    "delPayment": "Supprimer ce paiement ?"
   },
   "settlement": {
     "title": "Règlement",
@@ -441,6 +449,7 @@
     "edit": "Modifier",
     "empty": "Aucun modèle pour l’instant",
     "emptySub": "Crée-en un de zéro ou utilise « Enregistrer comme modèle » sur une activité existante.",
-    "deleteConfirm": "Supprimer ce modèle ?"
+    "deleteConfirm": "Supprimer ce modèle ?",
+    "deleteProductConfirm": "Supprimer ce produit du modèle ?"
   }
 }

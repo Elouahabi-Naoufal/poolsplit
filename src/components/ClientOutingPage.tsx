@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { formatDH } from "@/lib/utils";
 import {
@@ -23,56 +23,13 @@ import {
   removeOutingParticipantAction, requestLeaveOutingAction, activateOutingAction,
 } from "@/server/outings/actions";
 import QrInvite from "@/components/QrInvite";
-import ConfirmDialog from "@/components/ConfirmDialog";
+import WForm from "@/components/WForm";
 import { saveActivityAsTemplateAction } from "@/server/templates/actions";
 import { Link } from "@/i18n/navigation";
 import { redirect } from "next/navigation";
 import { IconCheck, IconX, IconPencil, IconChevronRight, IconReceipt, IconChevronDown } from "@/components/icons";
 
 type AR = { error?: string };
-
-function WForm({ action, initialState, children, className, confirmMessage }: {
-  action: (prevState: AR, formData: FormData) => Promise<AR>;
-  initialState: AR;
-  children: React.ReactNode;
-  className?: string;
-  confirmMessage?: string;
-}) {
-  const [state, formAction, pending] = useActionState(action, initialState);
-  const hasError = state && state.error;
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  const wrappedAction = confirmMessage
-    ? (formData: FormData) => {
-        if (!showConfirm) {
-          setShowConfirm(true);
-          setTimeout(() => setShowConfirm(false), 3000);
-          return state;
-        }
-        setShowConfirm(false);
-        return formAction(formData);
-      }
-    : formAction;
-
-  return (
-    <form action={wrappedAction} className={className}>
-      {children}
-      {pending && (
-        <div className="absolute inset-0 bg-surface/60 rounded-[inherit] flex items-center justify-center z-10">
-          <span className="w-5 h-5 border-2 border-border border-t-brand rounded-full animate-spin" />
-        </div>
-      )}
-      {showConfirm && confirmMessage && (
-        <div className="mt-2 p-2.5 rounded-[12px] bg-danger-subtle border border-danger/20 text-danger text-[13px] flex items-center gap-2">
-          <span>{confirmMessage}</span>
-          <button type="submit" className="btn-primary btn-sm text-[12px] px-3 py-1">Confirm</button>
-          <button type="button" onClick={() => setShowConfirm(false)} className="btn-ghost text-[12px]">Cancel</button>
-        </div>
-      )}
-      {hasError && <div className="mt-2 p-2.5 rounded-[12px] bg-danger-subtle border border-danger/20 text-danger text-[13px]">{state.error}</div>}
-    </form>
-  );
-}
 
 function SubmitBtn({ label, pending, variant = "primary" }: { label: string; pending?: boolean; variant?: "primary" | "danger" | "ghost" | "warn" }) {
   const cls = variant === "primary" ? "btn-primary" : variant === "danger" ? "btn-danger-solid" : variant === "warn" ? "btn-warn" : "btn-ghost";
@@ -124,7 +81,7 @@ function ProductsSection({ activity, canEdit }: { activity: any; canEdit: boolea
                         <SubmitBtn label={tc("save")} />
                       </WForm>
                     </EditDropdown>
-                    <WForm action={async () => await deleteActivityProductAction(p.id)} initialState={{}} confirmMessage="Delete this product?">
+                    <WForm action={async () => await deleteActivityProductAction(p.id)} initialState={{}} confirmMessage={t("delProduct")} confirmLabel={tc("confirm")} cancelLabel={tc("cancel")}>
                       <button type="submit" aria-label={t("deleteItem", { name: p.name })} className="inline-flex items-center text-danger/60 hover:text-danger transition-colors"><IconX size={12} /></button>
                     </WForm>
                   </div>
@@ -192,29 +149,78 @@ function NewActivityForm({ outingId, templates }: { outingId: string; templates:
   const [templateId, setTemplateId] = useState("");
   const [name, setName] = useState("");
   const [pricingModel, setPricingModel] = useState("FIXED");
-  const onPickTemplate = (value: string) => {
-    setTemplateId(value);
-    const tpl = templates.find(tt => tt.id === value);
-    if (tpl) {
-      setName(tpl.name);
-      setPricingModel(tpl.pricingModel);
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const matched = templates.filter(tp => tp.name.toLowerCase().includes(query.trim().toLowerCase()));
+
+  const onTypeSearch = (value: string) => {
+    setQuery(value);
+    setOpen(true);
+    if (templateId) {
+      const sel = templates.find(tt => tt.id === templateId);
+      if (!sel || sel.name !== value) setTemplateId("");
     }
   };
+
+  const onPickTemplate = (tpl: any) => {
+    setTemplateId(tpl.id);
+    setQuery(tpl.name);
+    setName(tpl.name);
+    setPricingModel(tpl.pricingModel);
+    setOpen(false);
+  };
+
   return (
     <div className="card-elevated p-5">
       <h3 className="text-[14px] font-semibold mb-3">{t("newActivity")}</h3>
       <WForm action={async (prevState, formData) => await createActivityAction(formData)} initialState={{}} className="space-y-3">
         <input type="hidden" name="outingId" value={outingId} />
+        <input name="templateId" type="hidden" value={templateId} />
         {templates.length > 0 && (
-          <select value={templateId} onChange={(e) => onPickTemplate(e.target.value)} className="input">
-            <option value="">{t("selectTemplate")}</option>
-            {templates.map(tpl => (
-              <option key={tpl.id} value={tpl.id}>{tpl.name} ({tpl.products.length} {t("products")})</option>
-            ))}
-          </select>
+          <div className="relative">
+            <input
+              value={query}
+              onChange={e => onTypeSearch(e.target.value)}
+              onFocus={() => setOpen(true)}
+              onBlur={() => setTimeout(() => setOpen(false), 150)}
+              placeholder={t("searchTemplates")}
+              autoComplete="off"
+              className="input pr-9"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => { setQuery(""); setTemplateId(""); setOpen(true); }}
+                aria-label={t("clearSearch")}
+                className="absolute end-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors p-1"
+              >
+                <IconX size={14} />
+              </button>
+            )}
+            {open && (
+              <div className="absolute z-30 mt-1.5 w-full rounded-[14px] bg-surface border border-border shadow-lg max-h-52 overflow-y-auto">
+                {matched.length === 0 ? (
+                  <div className="p-3 text-[13px] text-muted">{t("noTemplateMatches")}</div>
+                ) : (
+                  matched.map(tp => (
+                    <button
+                      key={tp.id}
+                      type="button"
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => onPickTemplate(tp)}
+                      className="w-full text-start px-3 py-2.5 hover:bg-elevated transition flex items-center justify-between gap-2"
+                    >
+                      <span className="min-w-0 truncate text-[13px] font-medium">{tp.name}</span>
+                      <span className="tag bg-elevated text-[11px] flex-shrink-0">{tp.products.length} {t("products")}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         )}
         {templateId && <div className="text-[12px] text-muted">{t("useTemplate")}</div>}
-        <input name="templateId" type="hidden" value={templateId} />
         <input name="name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("activityNamePh")} required className="input" />
         <select name="pricingModel" value={pricingModel} onChange={(e) => setPricingModel(e.target.value)} className="input">
           <option value="FIXED">{t("fixedOpt")}</option>
@@ -480,7 +486,7 @@ function ActivityCard({ activity, outingId, groupId, isOwner, isGroupAdmin, part
                 <WForm action={async () => await closeActivityAction(activity.id)} initialState={{}}>
                   <SubmitBtn label={tc("close")} variant="warn" />
                 </WForm>
-                <WForm action={async () => await deleteActivityAction(activity.id)} initialState={{}} confirmMessage="Delete this activity forever?">
+                <WForm action={async () => await deleteActivityAction(activity.id)} initialState={{}} confirmMessage={t("delActivity")} confirmLabel={tc("confirm")} cancelLabel={tc("cancel")}>
                   <SubmitBtn label={tc("delete")} variant="danger" />
                 </WForm>
               </>
@@ -580,7 +586,7 @@ function ActivityCard({ activity, outingId, groupId, isOwner, isGroupAdmin, part
                                   <SubmitBtn label={tc("save")} />
                                 </WForm>
                               </EditDropdown>
-                              <WForm action={async () => await deleteUsageRecordAction(r.id)} initialState={{}} confirmMessage="Delete this usage record?">
+                              <WForm action={async () => await deleteUsageRecordAction(r.id)} initialState={{}} confirmMessage={t("delUsage")} confirmLabel={tc("confirm")} cancelLabel={tc("cancel")}>
                                 <button type="submit" className="text-[12px] text-danger hover:underline">{tc("delete")}</button>
                               </WForm>
                             </div>
@@ -650,7 +656,7 @@ function ActivityCard({ activity, outingId, groupId, isOwner, isGroupAdmin, part
                                   <SubmitBtn label={tc("save")} />
                                 </WForm>
                               </EditDropdown>
-                              <WForm action={async () => await deleteLineItemAction(l.id)} initialState={{}} confirmMessage="Delete this item?">
+                              <WForm action={async () => await deleteLineItemAction(l.id)} initialState={{}} confirmMessage={t("delItem")} confirmLabel={tc("confirm")} cancelLabel={tc("cancel")}>
                                 <button type="submit" aria-label={t("deleteItem", { name: l.description })} className="inline-flex items-center text-danger/60 hover:text-danger transition-colors"><IconX size={12} /></button>
                               </WForm>
                             </div>
@@ -691,7 +697,7 @@ function ActivityCard({ activity, outingId, groupId, isOwner, isGroupAdmin, part
                               <SubmitBtn label={tc("save")} />
                             </WForm>
                           </EditDropdown>
-                          <WForm action={async () => await deleteActivityPaymentAction(p.id)} initialState={{}} confirmMessage="Delete this payment?">
+                          <WForm action={async () => await deleteActivityPaymentAction(p.id)} initialState={{}} confirmMessage={t("delPayment")} confirmLabel={tc("confirm")} cancelLabel={tc("cancel")}>
                             <button type="submit" aria-label={t("deletePayment")} className="inline-flex items-center text-danger/60 hover:text-danger transition-colors"><IconX size={12} /></button>
                           </WForm>
                         </span>

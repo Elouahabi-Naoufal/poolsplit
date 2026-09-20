@@ -193,7 +193,15 @@
     "unitLabel": "Unit",
     "useTemplate": "Use a template",
     "selectTemplate": "Select a template…",
-    "saveTemplate": "Save as template"
+    "saveTemplate": "Save as template",
+    "searchTemplates": "Search templates… (type to filter)",
+    "clearSearch": "Clear template search",
+    "noTemplateMatches": "No template matches your search.",
+    "delProduct": "Delete this product?",
+    "delActivity": "Delete this activity forever?",
+    "delUsage": "Delete this usage record?",
+    "delItem": "Delete this item?",
+    "delPayment": "Delete this payment?"
   },
   "settlement": {
     "title": "Settlement",
@@ -442,6 +450,7 @@
     "edit": "Edit",
     "empty": "No templates yet",
     "emptySub": "Create one from scratch or use “Save as template” on an existing activity.",
-    "deleteConfirm": "Delete this template?"
+    "deleteConfirm": "Delete this template?",
+    "deleteProductConfirm": "Delete this product from the template?"
   }
 }

@@ -192,7 +192,15 @@
     "unitLabel": "الوحدة",
     "useTemplate": "استخدام نموذج",
     "selectTemplate": "اختر نموذجاً…",
-    "saveTemplate": "حفظ كنموذج"
+    "saveTemplate": "حفظ كنموذج",
+    "searchTemplates": "ابحث عن قالب… (اكتب للتصفية)",
+    "clearSearch": "مسح بحث القوالب",
+    "noTemplateMatches": "لا يوجد قالب مطابق لبحثك.",
+    "delProduct": "حذف هذا المنتج؟",
+    "delActivity": "حذف هذه النشاط نهائيًا؟",
+    "delUsage": "حذف سجل الاستخدام؟",
+    "delItem": "حذف هذا البند؟",
+    "delPayment": "حذف هذا الدفع؟"
   },
   "settlement": {
     "title": "التسوية",
@@ -440,6 +448,7 @@
     "edit": "تعديل",
     "empty": "لا توجد نماذج بعد",
     "emptySub": "أنشئ واحداً من الصفر أو استخدم «حفظ كنموذج» على نشاط موجود.",
-    "deleteConfirm": "حذف هذا النموذج؟"
+    "deleteConfirm": "حذف هذا النموذج؟",
+    "deleteProductConfirm": "حذف هذا المنتج من القالب؟"
   }
 }

@@ -1,11 +1,12 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { formatDH } from "@/lib/utils";
 import {
   createTemplateAction, updateTemplateAction, deleteTemplateAction,
   createTemplateProductAction, updateTemplateProductAction, deleteTemplateProductAction,
 } from "@/server/templates/actions";
+import WForm from "@/components/WForm";
 import { IconChevronRight, IconX } from "@/components/icons";
 
 type Product = { id: string; name: string; unit: string; pricePerUnitCt: number };
@@ -13,46 +14,6 @@ type Template = {
   id: string; name: string; pricingModel: string; notes: string | null;
   products: Product[]; createdAt: Date; updatedAt: Date;
 };
-
-type AR = { error?: string };
-
-function WForm({ action, initialState, children, className, confirmMessage }: {
-  action: (prevState: AR, formData: FormData) => Promise<AR>;
-  initialState: AR;
-  children: React.ReactNode;
-  className?: string;
-  confirmMessage?: string;
-}) {
-  const [state, formAction, pending] = useActionState(action, initialState);
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  const wrappedAction = confirmMessage
-    ? (formData: FormData) => {
-        if (!showConfirm) {
-          setShowConfirm(true);
-          setTimeout(() => setShowConfirm(false), 3000);
-          return state;
-        }
-        setShowConfirm(false);
-        return formAction(formData);
-      }
-    : formAction;
-
-  return (
-    <form action={wrappedAction} className={className}>
-      {children}
-      {pending && <span className="w-4 h-4 border-2 border-border border-t-brand rounded-full animate-spin inline-block" />}
-      {showConfirm && confirmMessage && (
-        <div className="flex items-center gap-2 text-[12px] text-danger">
-          <span>{confirmMessage}</span>
-          <button type="submit" className="btn-primary btn-sm text-[12px] px-3 py-1">Confirm</button>
-          <button type="button" onClick={() => setShowConfirm(false)} className="btn-ghost text-[12px]">Cancel</button>
-        </div>
-      )}
-      {state && state.error && <div className="text-[12px] text-danger">{state.error}</div>}
-    </form>
-  );
-}
 
 function EditDropdown({ children, align = "end" }: { children: React.ReactNode; align?: "start" | "end" }) {
   const t = useTranslations("templates");
@@ -144,7 +105,7 @@ function TemplateCard({ tpl }: { tpl: Template }) {
                 <button type="submit" className="btn-primary text-[13px]">{t("save")}</button>
               </WForm>
             </EditDropdown>
-            <WForm action={async (prevState, formData) => await deleteTemplateAction(tpl.id)} initialState={{}} confirmMessage={t("deleteConfirm")} className="ms-1.5">
+            <WForm action={async (prevState, formData) => await deleteTemplateAction(tpl.id)} initialState={{}} confirmMessage={t("deleteConfirm")} confirmLabel={tc("confirm")} cancelLabel={tc("cancel")} className="ms-1.5">
               <button type="submit" aria-label={t("delete")} className="inline-flex items-center text-danger/60 hover:text-danger transition-colors"><IconX size={15} /></button>
             </WForm>
           </div>
@@ -168,7 +129,7 @@ function TemplateCard({ tpl }: { tpl: Template }) {
                         <button type="submit" className="btn-primary text-[13px]">{t("save")}</button>
                       </WForm>
                     </EditDropdown>
-                    <WForm action={async (prevState, formData) => await deleteTemplateProductAction(p.id)} initialState={{}}>
+                    <WForm action={async (prevState, formData) => await deleteTemplateProductAction(p.id)} initialState={{}} confirmMessage={t("deleteProductConfirm")} confirmLabel={tc("confirm")} cancelLabel={tc("cancel")}>
                       <button type="submit" aria-label={t("delete")} className="inline-flex items-center text-danger/60 hover:text-danger transition-colors"><IconX size={12} /></button>
                     </WForm>
                   </div>
