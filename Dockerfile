@@ -27,6 +27,9 @@ ENV DATABASE_URL="file:./data/app.db"
 ENV NEXT_TELEMETRY_DISABLED=1
 # Generate Prisma Client (required for TypeScript types during next build)
 RUN npx prisma generate
+# Patch scheduler to defer React work until the document has finished streaming
+# (fixes fatal hydration error #418 - react/react#37321)
+RUN node scripts/patch-scheduler.mjs
 # Build Next.js (standalone output)
 RUN npm run build
 
