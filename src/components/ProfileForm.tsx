@@ -27,8 +27,8 @@ export default function ProfileForm({
   saveLabel: string;
 }) {
   const [state, formAction, pending] = useActionState(
-    async (_prev: ProfileState, formData: FormData) => (await updateProfileAction(formData)) as ProfileState,
-    { success: false },
+    updateProfileAction as unknown as (prevState: ProfileState, formData: FormData) => Promise<ProfileState>,
+    {} as ProfileState,
   );
   const error = "error" in state && state.error ? state.error : null;
 
