@@ -13,7 +13,7 @@ export type ShellUser = {
   isAdmin: boolean;
 };
 
-export type ShellGroup = { id: string; name: string };
+export type ShellGroup = { id: string; name: string; image: string | null };
 
 const TINTS = [
   "bg-brand-subtle text-brand",
@@ -97,8 +97,13 @@ export default function AppShell({
                   const active = pathname.includes(`/groups/${g.id}`);
                   return (
                     <Link key={g.id} href={`/groups/${g.id}`} className={navRow(active)}>
-                      <span className={`w-5 h-5 rounded-[7px] flex items-center justify-center text-[11px] font-bold flex-shrink-0 ${tintFor(g.id)}`}>
-                        {g.name[0]?.toUpperCase()}
+                      <span className={`w-5 h-5 rounded-[7px] flex items-center justify-center text-[11px] font-bold flex-shrink-0 ${tintFor(g.id)} overflow-hidden`}>
+                        {g.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={g.image} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          g.name[0]?.toUpperCase()
+                        )}
                       </span>
                       <span className="truncate">{g.name}</span>
                     </Link>

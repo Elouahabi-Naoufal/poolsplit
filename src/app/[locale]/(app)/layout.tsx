@@ -29,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         avatarUrl: avatarSrc(user),
         isAdmin: user.isAdmin,
       }}
-      groups={memberships.map(m => ({ id: m.group.id, name: m.group.name }))}
+      groups={memberships.map(m => ({ id: m.group.id, name: m.group.name, image: m.group.image }))}
     >
       {children}
     </AppShell>
