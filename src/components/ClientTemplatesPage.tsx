@@ -144,7 +144,7 @@ function TemplateCard({ tpl }: { tpl: Template }) {
                 <button type="submit" className="btn-primary text-[13px]">{t("save")}</button>
               </WForm>
             </EditDropdown>
-            <WForm action={async () => await deleteTemplateAction(tpl.id)} initialState={{}} confirmMessage={t("deleteConfirm")} className="ms-1.5">
+            <WForm action={async (prevState, formData) => await deleteTemplateAction(tpl.id)} initialState={{}} confirmMessage={t("deleteConfirm")} className="ms-1.5">
               <button type="submit" aria-label={t("delete")} className="inline-flex items-center text-danger/60 hover:text-danger transition-colors"><IconX size={15} /></button>
             </WForm>
           </div>
@@ -168,7 +168,7 @@ function TemplateCard({ tpl }: { tpl: Template }) {
                         <button type="submit" className="btn-primary text-[13px]">{t("save")}</button>
                       </WForm>
                     </EditDropdown>
-                    <WForm action={async () => await deleteTemplateProductAction(p.id)} initialState={{}}>
+                    <WForm action={async (prevState, formData) => await deleteTemplateProductAction(p.id)} initialState={{}}>
                       <button type="submit" aria-label={t("delete")} className="inline-flex items-center text-danger/60 hover:text-danger transition-colors"><IconX size={12} /></button>
                     </WForm>
                   </div>

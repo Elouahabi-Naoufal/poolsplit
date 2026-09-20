@@ -498,7 +498,7 @@ function ActivityCard({ activity, outingId, groupId, isOwner, isGroupAdmin, part
           <SplitBar paid={activity.paid} responsibility={activity.responsibility} />
           {isGroupAdmin && (
             <div className="flex justify-end">
-              <WForm action={async () => await saveActivityAsTemplateAction(activity.id)} initialState={{}}>
+              <WForm action={async (prevState, formData) => await saveActivityAsTemplateAction(activity.id)} initialState={{}}>
                 <SubmitBtn label={t("saveTemplate")} variant="ghost" />
               </WForm>
             </div>
