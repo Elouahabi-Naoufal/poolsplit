@@ -275,7 +275,13 @@
     "removePic": "Remove",
     "picHint": "Any photo up to 10 MB — compressed automatically.",
     "language": "Language",
-    "languageHint": "Applies immediately and is remembered on this device."
+    "languageHint": "Applies immediately and is remembered on this device.",
+    "preferences": "Preferences",
+    "theme": "Theme",
+    "themeHint": "Switch between light and dark appearance.",
+    "friendshipMode": "Mode",
+    "friendshipModeHint": "Highlight group or guy/girl-focused splits.",
+    "logout": "Logout"
   },
   "admin": {
     "title": "Admin",

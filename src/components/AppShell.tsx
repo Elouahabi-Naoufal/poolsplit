@@ -1,7 +1,6 @@
 "use client";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { logoutAction } from "@/server/auth/logout-action";
 import { IconUsers, IconQr, IconPlus, IconTemplate } from "@/components/icons";
 import ThemeToggle from "@/components/ThemeToggle";
 import FriendshipModeToggle from "@/components/FriendshipModeToggle";
@@ -113,30 +112,31 @@ export default function AppShell({
             </div>
           )}
         </nav>
-        <div className="p-3 border-t border-border space-y-2">
+        <div className="p-2.5 border-t border-border">
           {user.isAdmin && (
             <Link href="/admin" className="tag bg-warn-subtle text-warn mb-2 w-full text-center block">{t("admin")}</Link>
           )}
-          <div className="flex items-center gap-1">
-            <FriendshipModeToggle />
-            <ThemeToggle />
-            <div className="flex items-center gap-2.5 min-w-0 flex-1 ms-1">
-              <Link href="/profile" className="w-8 h-8 rounded-full overflow-hidden bg-brand-subtle text-brand flex items-center justify-center text-[13px] font-bold flex-shrink-0">
+          <div className="flex items-center gap-1.5">
+            <Link
+              href="/profile"
+              className={`flex items-center gap-2 min-w-0 flex-1 h-11 px-2 rounded-[12px] transition-colors ${
+                profileActive ? "bg-elevated" : "hover:bg-elevated"
+              }`}
+            >
+              <span className="w-8 h-8 rounded-full overflow-hidden bg-brand-subtle text-brand flex items-center justify-center text-[13px] font-bold flex-shrink-0">
                 {user.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={user.avatarUrl} alt={user.displayName} className="w-full h-full object-cover" />
                 ) : (
                   user.displayName[0]?.toUpperCase()
                 )}
-              </Link>
-              <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-semibold truncate">{user.displayName}</div>
-                <div className="text-[11px] text-muted font-mono truncate">{user.publicId}</div>
-              </div>
-              <form action={logoutAction}>
-                <button className="btn-ghost text-[12px] px-2" title={t("logout")}>{t("logout")}</button>
-              </form>
-            </div>
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] font-semibold truncate">{user.displayName}</span>
+                <span className="block text-[11px] text-muted font-mono truncate">{user.publicId}</span>
+              </span>
+            </Link>
+            <ThemeToggle />
           </div>
         </div>
       </aside>

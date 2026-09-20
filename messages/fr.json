@@ -274,7 +274,13 @@
     "removePic": "Retirer",
     "picHint": "Photo jusqu'à 10 Mo — compressée automatiquement.",
     "language": "Langue",
-    "languageHint": "S'applique immédiatement et reste mémorisée sur cet appareil."
+    "languageHint": "S'applique immédiatement et reste mémorisée sur cet appareil.",
+    "preferences": "Préférences",
+    "theme": "Thème",
+    "themeHint": "Basculez entre l’apparence claire et sombre.",
+    "friendshipMode": "Mode",
+    "friendshipModeHint": "Mettez en avant les splits de groupe ou hommes/femmes.",
+    "logout": "Déconnexion"
   },
   "admin": {
     "title": "Admin",
