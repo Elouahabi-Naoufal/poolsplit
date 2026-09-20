@@ -8,8 +8,9 @@ import { getTranslations } from "next-intl/server";
 
 /**
  * Templates are personal: each user manages their own library.
- * A template can only be USED (applied to a new activity) by the admin of
- * the group the activity belongs to.
+ * A template can only be USED (applied to a new activity) or captured from an
+ * activity (save-as-template) by the group admin or by members granted the
+ * canUseTemplates group permission.
  */
 
 const isOwnTemplate = async (templateId: string, userId: string) => {
@@ -86,9 +87,14 @@ export async function saveActivityAsTemplateAction(activityId: string) {
   const outing = await prisma.outing.findUnique({ where: { id: activity.outingId! } });
   if (!outing) return { error: t("outingNotFound") };
 
-  // Only the group admin (owner) may save activities as templates.
-  const group = await prisma.group.findUnique({ where: { id: outing.groupId } });
-  if (!group || group.ownerId !== session.userId) return { error: t("groupAdminOnlyTemplates") };
+  // Only the group admin (owner) or members granted canUseTemplates may save
+  // activities as templates.
+  const member = await prisma.groupMember.findUnique({
+    where: { groupId_userId: { groupId: outing.groupId, userId: session.userId } },
+  });
+  if (!member || (member.role !== "OWNER" && !member.canUseTemplates)) {
+    return { error: t("groupAdminOnlyTemplates") };
+  }
 
   const existing = await prisma.activityTemplate.findFirst({
     where: { userId: session.userId, name: activity.name, pricingModel: activity.pricingModel },

@@ -8,7 +8,8 @@ import { userError } from "@/lib/errors";
 import { getTranslations } from "next-intl/server";
 
 /**
- * Record a payment for an activity. Only outing owner can record payments.
+ * Record a payment for an activity. Outing owner or any outing participant
+ * granted the canRecordPayments group permission can record payments.
  * Overflow guard: total payments cannot exceed total responsibility.
  */
 export async function recordActivityPaymentAction(formData: FormData) {
@@ -32,7 +33,13 @@ export async function recordActivityPaymentAction(formData: FormData) {
   const caller = await prisma.outingParticipant.findUnique({
     where: { outingId_userId: { outingId: activity.outingId!, userId: session.userId } },
   });
-  if (!caller || caller.role !== "OWNER") return { error: t("onlyOwner") };
+  if (!caller) return { error: t("onlyOwner") };
+  if (caller.role !== "OWNER") {
+    const member = await prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId: outing.groupId, userId: session.userId } },
+    });
+    if (!member || !member.canRecordPayments) return { error: t("onlyOwner") };
+  }
 
   let amountCentimes: number;
   try {
@@ -78,7 +85,7 @@ export async function recordActivityPaymentAction(formData: FormData) {
 }
 
 /**
- * Update a payment. Owner only, while activity is open.
+ * Update a payment. Owner or canRecordPayments grantee, while activity is open.
  */
 export async function updateActivityPaymentAction(paymentId: string, amountDH: string) {
   const session = await requireSession();
@@ -96,7 +103,13 @@ export async function updateActivityPaymentAction(paymentId: string, amountDH: s
   const caller = await prisma.outingParticipant.findUnique({
     where: { outingId_userId: { outingId: activity.outingId!, userId: session.userId } },
   });
-  if (!caller || caller.role !== "OWNER") return { error: t("onlyOwner") };
+  if (!caller) return { error: t("onlyOwner") };
+  if (caller.role !== "OWNER") {
+    const member = await prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId: outing.groupId, userId: session.userId } },
+    });
+    if (!member || !member.canRecordPayments) return { error: t("onlyOwner") };
+  }
   void 0;
 
   let newAmount: number;
@@ -128,7 +141,7 @@ export async function updateActivityPaymentAction(paymentId: string, amountDH: s
 }
 
 /**
- * Delete a payment. Owner only.
+ * Delete a payment. Owner or canRecordPayments grantee.
  */
 export async function deleteActivityPaymentAction(paymentId: string) {
   const session = await requireSession();
@@ -145,7 +158,13 @@ export async function deleteActivityPaymentAction(paymentId: string) {
   const caller = await prisma.outingParticipant.findUnique({
     where: { outingId_userId: { outingId: activity.outingId!, userId: session.userId } },
   });
-  if (!caller || caller.role !== "OWNER") return { error: t("onlyOwner") };
+  if (!caller) return { error: t("onlyOwner") };
+  if (caller.role !== "OWNER") {
+    const member = await prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId: outing.groupId, userId: session.userId } },
+    });
+    if (!member || !member.canRecordPayments) return { error: t("onlyOwner") };
+  }
   void 0;
 
   await prisma.activityPayment.delete({ where: { id: paymentId } });

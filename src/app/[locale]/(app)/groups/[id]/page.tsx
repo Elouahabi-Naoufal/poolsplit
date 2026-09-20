@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import QrInvite from "@/components/QrInvite";
 import GroupImageForm from "@/components/GroupImageForm";
+import GroupPermissions from "@/components/GroupPermissions";
 import { IconChevronRight } from "@/components/icons";
 import { avatarSrc } from "@/lib/avatar";
 import { formatDH } from "@/lib/utils";
@@ -53,6 +54,7 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
   const tn = await getTranslations({ locale: locale as AppLocale, namespace: "nav" });
 
   const isOwner = group.ownerId === session.userId;
+  const canCreateOuting = isOwner || member.canManageOutings;
   const members = await prisma.groupMember.findMany({ where: { groupId: id }, include: { user: true } });
   const outings = await prisma.outing.findMany({
     where: { groupId: id },
@@ -179,7 +181,24 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
           </div>
 
           {isOwner && (
-            <div className="pt-3 border-t border-border">
+            <GroupPermissions
+              groupId={id}
+              members={members
+                .filter(m => m.userId !== group.ownerId)
+                .map(m => ({
+                  userId: m.userId,
+                  displayName: m.user.displayName,
+                  perms: {
+                    canManageOutings: m.canManageOutings,
+                    canRecordPayments: m.canRecordPayments,
+                    canUseTemplates: m.canUseTemplates,
+                  },
+                }))}
+            />
+          )}
+
+          {isOwner && (
+            <div className="pt-3 border-t border-border mt-4">
               <h3 className="text-[13px] font-medium text-muted mb-2">{t("inviteMember")}</h3>
               <form action={async (formData: FormData) => {
                 "use server";
@@ -238,7 +257,7 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
             )}
           </div>
 
-          {isOwner && (
+          {canCreateOuting && (
             <details className="rounded-[20px] border border-border p-4">
               <summary className="flex items-center gap-1 text-[14px] font-medium cursor-pointer text-muted"><IconChevronRight size={13} className="chev" />{t("createOuting")}</summary>
               <form action={async (formData: FormData) => {

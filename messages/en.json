@@ -123,7 +123,13 @@
     "imageUpload": "Upload image",
     "imageChange": "Change image",
     "imageRemove": "Remove image",
-    "imageHint": "JPG, PNG or WebP up to 5 MB. Members will see it in the group list and header."
+    "imageHint": "JPG, PNG or WebP up to 5 MB. Members will see it in the group list and header.",
+    "permissionsTitle": "Permissions",
+    "permissionsHint": "Decide what each member can do. The owner can always do everything.",
+    "permissionsNoMembers": "No other members to configure yet.",
+    "permManageOutings": "Set up outings",
+    "permRecordPayments": "Record who paid",
+    "permUseTemplates": "Use their templates"
   },
   "outing": {
     "balances": "Balances",

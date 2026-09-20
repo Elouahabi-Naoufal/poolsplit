@@ -260,14 +260,14 @@ export default function ClientOutingPage({
   groupId, outingId, isOwner, sessionUserId,
   participants, usersMap, activities, activityStats,
   memberBalances, totalResponsibility, totalPaid, allActivitiesClosed, hasSettlement, outing,
-  groupName, templates, isGroupAdmin,
+  groupName, templates, canUseTemplates, canRecordPayments,
 }: {
   groupId: string; outingId: string; isOwner: boolean; sessionUserId: string;
   participants: any[]; usersMap: Map<string, string>; activities: any[]; activityStats: any[]; memberBalances: any[];
   totalResponsibility: number; totalPaid: number; allActivitiesClosed: boolean;
   hasSettlement: boolean; outing: any;
   groupName?: string;
-  templates?: any[]; isGroupAdmin?: boolean;
+  templates?: any[]; canUseTemplates?: boolean; canRecordPayments?: boolean;
 }) {
   const netDiff = totalResponsibility - totalPaid;
   const t = useTranslations("outing");
@@ -359,7 +359,8 @@ export default function ClientOutingPage({
                   outingId={outingId}
                   groupId={groupId}
                   isOwner={isOwner}
-                  isGroupAdmin={!!isGroupAdmin}
+                  canUseTemplates={!!canUseTemplates}
+                  canRecordPayments={!!canRecordPayments}
                   participants={participants}
                   usersMap={usersMap}
                   userId={sessionUserId}
@@ -371,7 +372,7 @@ export default function ClientOutingPage({
           )}
 
           {isOwner && outing.status !== "SETTLED" && (
-            <NewActivityForm outingId={outingId} templates={isGroupAdmin ? templates ?? [] : []} />
+            <NewActivityForm outingId={outingId} templates={canUseTemplates ? templates ?? [] : []} />
           )}
         </section>
           </div>
@@ -446,8 +447,8 @@ function StatusTag({ status }: { status: string }) {
   );
 }
 
-function ActivityCard({ activity, outingId, groupId, isOwner, isGroupAdmin, participants, usersMap, userId, expanded, onToggle }: {
-  activity: any; outingId: string; groupId: string; isOwner: boolean; isGroupAdmin: boolean;
+function ActivityCard({ activity, outingId, groupId, isOwner, canUseTemplates, canRecordPayments, participants, usersMap, userId, expanded, onToggle }: {
+  activity: any; outingId: string; groupId: string; isOwner: boolean; canUseTemplates: boolean; canRecordPayments: boolean;
   participants: any[]; usersMap: Map<string, string>; userId: string;
   expanded: boolean; onToggle: () => void;
 }) {
@@ -456,6 +457,7 @@ function ActivityCard({ activity, outingId, groupId, isOwner, isGroupAdmin, part
   const isFixed = activity.pricingModel === "FIXED";
   const isVariable = activity.pricingModel === "VARIABLE";
   const canEdit = isOwner && activity.status === "OPEN";
+  const canEditPayments = canEdit || (canRecordPayments && activity.status === "OPEN");
 
   return (
     <div className="card-elevated">
@@ -502,7 +504,7 @@ function ActivityCard({ activity, outingId, groupId, isOwner, isGroupAdmin, part
       {expanded && (
         <div className="px-5 pb-5 space-y-4 animate-in border-t border-border pt-4">
           <SplitBar paid={activity.paid} responsibility={activity.responsibility} />
-          {isGroupAdmin && (
+          {canUseTemplates && (
             <div className="flex justify-end">
               <WForm action={async (prevState, formData) => await saveActivityAsTemplateAction(activity.id)} initialState={{}}>
                 <SubmitBtn label={t("saveTemplate")} variant="ghost" />
@@ -687,7 +689,7 @@ function ActivityCard({ activity, outingId, groupId, isOwner, isGroupAdmin, part
                     <span className="text-[14px]">{usersMap.get(p.userId) || "?"}{p.userId === userId ? ` ${t("youSuffix")}` : ""}</span>
                     <span className="flex items-center gap-2">
                       <span className="money text-[15px] font-semibold">{formatDH(p.amountCentimes)}</span>
-                      {canEdit && (
+                      {canEditPayments && (
                         <span className="flex items-center gap-1">
                           <EditDropdown align="end">
                             <WForm action={async (prevState, formData) => {
@@ -707,7 +709,7 @@ function ActivityCard({ activity, outingId, groupId, isOwner, isGroupAdmin, part
                 ))}
               </div>
             )}
-            {canEdit && (
+            {canEditPayments && (
               <details className="rounded-[20px] border border-border p-3.5">
                 <summary className="flex items-center gap-1 text-[13px] cursor-pointer text-muted font-semibold"><IconChevronRight size={13} className="chev" /> {t("recordPayment")}</summary>
                 <WForm action={async (prevState, formData) => await recordActivityPaymentAction(formData)} initialState={{}} className="space-y-2.5 mt-3">

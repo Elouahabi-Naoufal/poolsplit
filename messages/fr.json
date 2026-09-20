@@ -122,7 +122,13 @@
     "imageUpload": "Importer une image",
     "imageChange": "Changer l’image",
     "imageRemove": "Supprimer l’image",
-    "imageHint": "JPG, PNG ou WebP jusqu’à 5 Mo. Les membres la verront dans la liste et l’en-tête du groupe."
+    "imageHint": "JPG, PNG ou WebP jusqu’à 5 Mo. Les membres la verront dans la liste et l’en-tête du groupe.",
+    "permissionsTitle": "Autorisations",
+    "permissionsHint": "Choisissez ce que chaque membre peut faire. Le propriétaire peut toujours tout faire.",
+    "permissionsNoMembers": "Aucun autre membre à configurer pour l’instant.",
+    "permManageOutings": "Créer des sorties",
+    "permRecordPayments": "Enregistrer qui a payé",
+    "permUseTemplates": "Utiliser ses modèles"
   },
   "outing": {
     "balances": "Soldes",

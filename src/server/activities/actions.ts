@@ -37,8 +37,8 @@ export async function createActivityAction(formData: FormData) {
     return { error: t("onlyOwner") };
   }
 
-  // If a template was chosen, it may only be used by the group admin (owner),
-  // and it must belong to the current user.
+  // If a template was chosen, the user must have the canUseTemplates group
+  // permission (owner included), and the template must belong to them.
   let templateProducts: { name: string; unit: string; pricePerUnitCt: number }[] = [];
   if (templateId) {
     const template = await prisma.activityTemplate.findUnique({
@@ -47,8 +47,12 @@ export async function createActivityAction(formData: FormData) {
     });
     if (!template) return { error: t("templateMissing") };
     if (template.userId !== session.userId) return { error: t("templateNotOwner") };
-    const group = await prisma.group.findUnique({ where: { id: outing.groupId } });
-    if (!group || group.ownerId !== session.userId) return { error: t("groupAdminOnlyTemplates") };
+    const member = await prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId: outing.groupId, userId: session.userId } },
+    });
+    if (!member || (member.role !== "OWNER" && !member.canUseTemplates)) {
+      return { error: t("groupAdminOnlyTemplates") };
+    }
     templateProducts = template.products.map(p => ({
       name: p.name,
       unit: p.unit,

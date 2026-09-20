@@ -70,11 +70,14 @@ model Group {
 }
 
 model GroupMember {
-  id           String   @id @default(cuid())
-  groupId      String
-  userId       String
-  role         String   @default("MEMBER")
-  joinedAt     DateTime @default(now())
+  id                String   @id @default(cuid())
+  groupId           String
+  userId            String
+  role              String   @default("MEMBER")
+  joinedAt          DateTime @default(now())
+  canManageOutings  Boolean  @default(false)
+  canRecordPayments Boolean  @default(false)
+  canUseTemplates   Boolean  @default(false)
 
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)

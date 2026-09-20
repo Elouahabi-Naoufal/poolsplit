@@ -3,6 +3,7 @@ import { getSession } from "@/server/auth/session";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import ClientOutingPage from "@/components/ClientOutingPage";
+import { getGroupMemberPerms } from "@/server/groups/permissions";
 import { getTranslations } from "next-intl/server";
 import type { AppLocale } from "@/i18n/routing";
 
@@ -26,8 +27,10 @@ export default async function OutingPage({ params }: { params: Promise<{ id: str
   }
 
   const isOwner = participant.role === "OWNER";
-  const isGroupAdmin = group.ownerId === session.userId;
-  const templates = isGroupAdmin
+  const groupPerms = await getGroupMemberPerms(groupId, session.userId);
+  const canUseTemplates = !!groupPerms?.canUseTemplates;
+  const canRecordPayments = isOwner || !!groupPerms?.canRecordPayments;
+  const templates = canUseTemplates
     ? await prisma.activityTemplate.findMany({
         where: { userId: session.userId },
         include: { products: true },
@@ -109,7 +112,8 @@ export default async function OutingPage({ params }: { params: Promise<{ id: str
       outing={outing}
       groupName={group.name}
       templates={templates}
-      isGroupAdmin={isGroupAdmin}
+      canUseTemplates={canUseTemplates}
+      canRecordPayments={canRecordPayments}
     />
   );
 }

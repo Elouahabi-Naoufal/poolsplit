@@ -7,7 +7,8 @@ import { generateGroupPublicToken } from "@/lib/utils";
 import { getTranslations } from "next-intl/server";
 
 /**
- * Create an outing within a group. Only group members can create outings.
+ * Create an outing within a group. Group owner or members with the
+ * canManageOutings permission can create outings.
  * The creator becomes an OutingParticipant automatically.
  */
 export async function createOutingAction(formData: FormData) {
@@ -28,6 +29,7 @@ export async function createOutingAction(formData: FormData) {
     where: { groupId_userId: { groupId, userId: session.userId } },
   });
   if (!member) return { error: t("notGroupMember") };
+  if (member.role !== "OWNER" && !member.canManageOutings) return { error: t("onlyOwner") };
 
   const outing = await prisma.outing.create({
     data: {

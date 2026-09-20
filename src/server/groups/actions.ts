@@ -149,6 +149,48 @@ export async function removeMemberAction(groupId: string, userId: string) {
   return { success: true };
 }
 
+// ── Group permissions ─────────────────────────────────────────
+
+const groupPermissionKeys = ["canManageOutings", "canRecordPayments", "canUseTemplates"] as const;
+
+/**
+ * Update a member's group permissions. Group owner only.
+ * The owner themselves cannot be edited here — they are always allowed.
+ */
+export async function updateGroupPermissionsAction(
+  groupId: string,
+  userId: string,
+  permissions: Partial<Record<(typeof groupPermissionKeys)[number], boolean>>
+) {
+  const session = await requireSession();
+  const t = await getTranslations("errors");
+
+  const group = await prisma.group.findUnique({ where: { id: groupId } });
+  if (!group) return { error: t("groupMissing") };
+  if (group.ownerId !== session.userId) return { error: t("onlyOwner") };
+  if (userId === group.ownerId) return { error: t("cantRemoveOwner") };
+
+  const member = await prisma.groupMember.findUnique({ where: { groupId_userId: { groupId, userId } } });
+  if (!member) return { error: t("notGroupMember") };
+
+  const data: Record<string, boolean> = {};
+  for (const key of groupPermissionKeys) {
+    if (permissions[key] !== undefined) data[key] = permissions[key];
+  }
+
+  await prisma.groupMember.update({ where: { id: member.id }, data });
+  await logEvent({
+    groupId,
+    actorId: session.userId,
+    eventType: "PERMISSIONS_UPDATED",
+    entityType: "GroupMember",
+    entityId: member.id,
+    metadata: { userId, permissions: data },
+  });
+  revalidatePath(`/groups/${groupId}`);
+  return { success: true };
+}
+
 // ── Group image ──────────────────────────────────────────────
 
 const MAX_GROUP_IMAGE_MB = 5;

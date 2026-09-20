@@ -122,7 +122,13 @@
     "imageUpload": "رفع صورة",
     "imageChange": "تغيير الصورة",
     "imageRemove": "إزالة الصورة",
-    "imageHint": "JPG أو PNG أو WebP بحد أقصى 5 ميجا. سيراها الأعضاء في القائمة ورأس الصفحة."
+    "imageHint": "JPG أو PNG أو WebP بحد أقصى 5 ميجا. سيراها الأعضاء في القائمة ورأس الصفحة.",
+    "permissionsTitle": "الصلاحيات",
+    "permissionsHint": "قرّر ما يستطيع أن يفعله كل عضو. المالك يستطيع دائمًا كل شيء.",
+    "permissionsNoMembers": "لا يوجد أعضاء آخرون لتكوين باعد.",
+    "permManageOutings": "إنشاء النشاطات",
+    "permRecordPayments": "تسجيل من دفع",
+    "permUseTemplates": "استخدام قوالبه"
   },
   "outing": {
     "balances": "الأرصدة",
