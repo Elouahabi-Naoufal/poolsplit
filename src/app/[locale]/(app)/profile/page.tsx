@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/server/auth/session";
 import { redirect } from "next/navigation";
-import { updateProfileAction } from "@/server/profile/actions";
-import AvatarPicker from "@/components/AvatarPicker";
+import ProfileForm from "@/components/ProfileForm";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { avatarSrc } from "@/lib/avatar";
 import { getTranslations } from "next-intl/server";
@@ -38,23 +37,20 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
           </div>
         </div>
 
-        <form action={async (formData: FormData) => { "use server"; await updateProfileAction(formData); }} className="card-elevated p-6 space-y-5">
+        <div className="space-y-4">
           <h2 className="text-[15px] font-semibold">{t("editProfile")}</h2>
-          <AvatarPicker
-            currentAvatar={avatarSrc(user)}
-            displayName={user.displayName}
-            uploadLabel={t("uploadPic")}
-            changeLabel={t("changePic")}
-            removeLabel={t("removePic")}
-            hint={t("picHint")}
-            maxMB={MAX_AVATAR_MB}
-          />
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-medium text-muted">{t("displayName")}</label>
-            <input name="displayName" defaultValue={user.displayName} required minLength={2} maxLength={50} className="input" />
-          </div>
-          <button className="btn-primary">{t("save")}</button>
-        </form>
+          <ProfileForm
+          currentAvatar={avatarSrc(user)}
+          displayName={user.displayName}
+          uploadLabel={t("uploadPic")}
+          changeLabel={t("changePic")}
+          removeLabel={t("removePic")}
+          hint={t("picHint")}
+          maxMB={MAX_AVATAR_MB}
+          displayNameLabel={t("displayName")}
+          saveLabel={t("save")}
+        />
+        </div>
 
         <LanguageSwitcher />
 

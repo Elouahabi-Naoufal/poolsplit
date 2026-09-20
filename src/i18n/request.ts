@@ -9,5 +9,12 @@ export default getRequestConfig(async ({ requestLocale }) => {
   return {
     locale,
     messages: (await import(`../../messages/${locale}.json`)).default,
+    // A missing/invalid translation must never crash a page render.
+    onError: () => {},
+    getMessageFallback: ({ namespace, key }) => {
+      const full = namespace ? `${namespace}.${key}` : key;
+      console.error(`[i18n] Missing message "${full}" (${locale})`);
+      return full;
+    },
   };
 });

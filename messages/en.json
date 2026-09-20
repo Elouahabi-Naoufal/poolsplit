@@ -9,7 +9,8 @@
     "profile": "Profile",
     "new": "New",
     "admin": "Admin",
-    "logout": "Logout"
+    "logout": "Logout",
+    "mainNav": "Primary navigation"
   },
   "common": {
     "breadcrumb": "Breadcrumb",

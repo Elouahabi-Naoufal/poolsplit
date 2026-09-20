@@ -9,7 +9,8 @@
     "profile": "Profil",
     "new": "Nouveau",
     "admin": "Admin",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "mainNav": "Navigation principale"
   },
   "common": {
     "breadcrumb": "Fil d'Ariane",
