@@ -1,41 +1,41 @@
 "use client";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useZxing, type DetectedBarcode } from "react-zxing";
+
+const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
+  audio: false,
+  video: { facingMode: "environment" },
+};
+const FALLBACK_CONSTRAINTS: MediaStreamConstraints = {
+  audio: false,
+  video: true,
+};
+
+function isIOS() {
+  if (typeof navigator === "undefined") return false;
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
 
 interface QrScannerProps {
   onScan: (decodedText: string) => void;
   onError?: (error: string) => void;
 }
 
-type Phase =
-  | { kind: "checking" }
-  | { kind: "ready" }
-  | { kind: "active" }
-  | { kind: "denied" }
-  | { kind: "no-camera" }
-  | { kind: "insecure" }
-  | { kind: "error"; message: string };
+type Phase = "checking" | "ready" | "active" | "denied" | "no-camera" | "insecure" | "error";
 
-function describeError(err: unknown): Phase {
-  const name = err instanceof DOMException ? err.name : "";
-  if (name === "NotAllowedError") return { kind: "denied" };
-  if (name === "NotFoundError" || name === "OverconstrainedError") return { kind: "no-camera" };
-  return { kind: "error", message: err instanceof Error ? err.message : "Camera error" };
-}
-
-async function probePermission(): Promise<"granted" | "denied" | "unknown"> {
-  try {
-    const status = await navigator.permissions?.query({ name: "camera" as PermissionName });
-    if (status?.state === "granted") return "granted";
-    if (status?.state === "denied") return "denied";
-  } catch {
-    // Permissions API unavailable (older Safari) — fall through to direct request.
-  }
-  return "unknown";
-}
-
-function ScannerView({ onScan, onStreamError }: { onScan: (v: string) => void; onStreamError: (e: unknown) => void }) {
+function ScannerView({
+  onScan,
+  onStreamError,
+  fallback,
+}: {
+  onScan: (v: string) => void;
+  onStreamError: (e: unknown) => void;
+  fallback: boolean;
+}) {
   const t = useTranslations("scanner");
   const [paused, setPaused] = useState(false);
   const scannedRef = useRef(false);
@@ -52,6 +52,7 @@ function ScannerView({ onScan, onStreamError }: { onScan: (v: string) => void; o
 
   const { ref } = useZxing({
     paused,
+    constraints: fallback ? FALLBACK_CONSTRAINTS : VIDEO_CONSTRAINTS,
     onDecodeResult: onDecode,
     onError(err) {
       if (!scannedRef.current) onStreamError(err);
@@ -69,7 +70,7 @@ function ScannerView({ onScan, onStreamError }: { onScan: (v: string) => void; o
         <video ref={ref} muted playsInline className="w-full h-auto" style={{ minHeight: 250 }} />
       </div>
       <button onClick={togglePause} className="btn-secondary px-6">
-          {paused ? t("resume") : t("pause")}
+        {paused ? t("resume") : t("pause")}
       </button>
     </div>
   );
@@ -77,57 +78,114 @@ function ScannerView({ onScan, onStreamError }: { onScan: (v: string) => void; o
 
 export default function QrScanner({ onScan, onError }: QrScannerProps) {
   const t = useTranslations("scanner");
-  const [phase, setPhase] = useState<Phase>({ kind: "checking" });
+  const [phase, setPhase] = useState<Phase>("checking");
   const [busy, setBusy] = useState(false);
   const [runId, setRunId] = useState(0);
+  const [fallback, setFallback] = useState(false);
+  const [ios, setIos] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setPhase({ kind: "insecure" });
-      return;
-    }
-    probePermission().then(state => {
-      if (state === "denied") setPhase({ kind: "denied" });
-      else setPhase({ kind: "ready" });
-    });
+    setIos(isIOS());
   }, []);
 
-  const request = useCallback(async () => {
+  const applyCameraError = useCallback(
+    (err: unknown) => {
+      const name = err instanceof DOMException ? err.name : "";
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setPhase("denied");
+        onError?.(t("deniedToast"));
+      } else if (name === "NotFoundError") {
+        setPhase("no-camera");
+      } else {
+        setPhase("error");
+        setErrorMsg(err instanceof Error ? err.message : null);
+        onError?.(err instanceof Error ? err.message : "Camera error");
+      }
+    },
+    [onError, t]
+  );
+
+  const start = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
-      setPhase({ kind: "insecure" });
+      setPhase("insecure");
       return;
     }
     setBusy(true);
     try {
-      // User-tap request: this is what makes the browser show the prompt
-      // reliably (including iOS Safari). Release the probe stream at once;
-      // the decoder opens its own stream without re-prompting.
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-        audio: false,
-      });
+      let stream: MediaStream | null = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "OverconstrainedError") {
+          stream = await navigator.mediaDevices.getUserMedia(FALLBACK_CONSTRAINTS);
+        } else {
+          throw err;
+        }
+      }
       stream.getTracks().forEach(track => track.stop());
       setRunId(id => id + 1);
-      setPhase({ kind: "active" });
+      setPhase("active");
     } catch (err) {
-      const next = describeError(err);
-      setPhase(next);
-      if (next.kind === "denied") onError?.(t("deniedToast"));
-      else if (next.kind === "error") onError?.(next.message);
+      applyCameraError(err);
     } finally {
       setBusy(false);
     }
-  }, [onError, t]);
+  }, [applyCameraError]);
 
-  const retry = useCallback(() => {
-    setPhase({ kind: "checking" });
-    probePermission().then(state => {
-      if (state === "denied") setPhase({ kind: "denied" });
-      else void request();
-    });
-  }, [request]);
+  const probe = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setPhase("insecure");
+      return;
+    }
+    try {
+      const status = await navigator.permissions?.query({ name: "camera" as PermissionName });
+      if (status?.state === "denied") {
+        setPhase("denied");
+        return;
+      }
+      if (status?.state === "granted") {
+        void start();
+        return;
+      }
+    } catch {
+      // Permissions API unavailable (older Safari) — ask via the button below.
+    }
+    setPhase("ready");
+  }, [start]);
 
-  if (phase.kind === "checking") {
+  useEffect(() => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setPhase("insecure");
+      return;
+    }
+    void probe();
+  }, [probe]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "visible" && (phase === "denied" || phase === "error")) {
+        setPhase("checking");
+        void probe();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [phase, probe]);
+
+  const handleStreamError = useCallback(
+    (err: unknown) => {
+      if (err instanceof DOMException && err.name === "OverconstrainedError" && !fallback) {
+        setFallback(true);
+        setRunId(id => id + 1);
+        return;
+      }
+      applyCameraError(err);
+    },
+    [applyCameraError, fallback]
+  );
+
+  if (phase === "checking") {
     return (
       <div className="flex flex-col items-center gap-3 py-10">
         <div className="animate-spin w-8 h-8 border-4 border-border border-t-action rounded-full" />
@@ -136,43 +194,44 @@ export default function QrScanner({ onScan, onError }: QrScannerProps) {
     );
   }
 
-  if (phase.kind === "ready") {
+  if (phase === "ready") {
     return (
       <div className="flex flex-col items-center gap-3 py-8 text-center">
         <p className="text-[14px] font-semibold">{t("allowTitle")}</p>
         <p className="text-[13px] text-muted max-w-xs">{t("allowSub")}</p>
-        <button onClick={() => void request()} disabled={busy} className="btn-primary px-6">
+        <button onClick={() => void start()} disabled={busy} className="btn-primary px-6">
           {busy ? t("requesting") : t("enable")}
         </button>
       </div>
     );
   }
 
-  if (phase.kind === "denied") {
+  if (phase === "denied") {
     return (
       <div className="flex flex-col items-center gap-3 py-8 text-center">
         <p className="text-[14px] font-semibold text-danger">{t("blockedTitle")}</p>
-        <p className="text-[13px] text-muted max-w-xs">{t("blockedSub")}</p>
-        <button onClick={retry} className="btn-primary px-6">
-          {t("tryAgain")}
+        <p className="text-[13px] text-muted max-w-xs">{ios ? t("blockedSubIos") : t("blockedSub")}</p>
+        <button onClick={() => void start()} disabled={busy} className="btn-primary px-6">
+          {busy ? t("requesting") : t("tryAgain")}
         </button>
+        <p className="text-[12px] text-muted max-w-xs">{t("tryAgainSub")}</p>
       </div>
     );
   }
 
-  if (phase.kind === "no-camera") {
+  if (phase === "no-camera") {
     return (
       <div className="flex flex-col items-center gap-3 py-8 text-center">
         <p className="text-[14px] font-semibold">{t("noCameraTitle")}</p>
         <p className="text-[13px] text-muted max-w-xs">{t("noCameraSub")}</p>
-        <button onClick={retry} className="btn-secondary px-6">
+        <button onClick={() => void start()} disabled={busy} className="btn-secondary px-6">
           {t("tryAgain")}
         </button>
       </div>
     );
   }
 
-  if (phase.kind === "insecure") {
+  if (phase === "insecure") {
     return (
       <div className="flex flex-col items-center gap-3 py-8 text-center">
         <p className="text-[14px] font-semibold">{t("insecureTitle")}</p>
@@ -181,12 +240,12 @@ export default function QrScanner({ onScan, onError }: QrScannerProps) {
     );
   }
 
-  if (phase.kind === "error") {
+  if (phase === "error") {
     return (
       <div className="flex flex-col items-center gap-3 py-8 text-center">
         <p className="text-[14px] font-semibold text-danger">{t("errorTitle")}</p>
-        <p className="text-[13px] text-muted max-w-xs">{phase.message}</p>
-        <button onClick={retry} className="btn-secondary px-6">
+        <p className="text-[13px] text-muted max-w-xs">{errorMsg ?? t("errorSub")}</p>
+        <button onClick={() => void start()} disabled={busy} className="btn-secondary px-6">
           {t("tryAgain")}
         </button>
       </div>
@@ -196,11 +255,9 @@ export default function QrScanner({ onScan, onError }: QrScannerProps) {
   return (
     <ScannerView
       key={runId}
+      fallback={fallback}
       onScan={onScan}
-      onStreamError={err => {
-        const next = describeError(err);
-        setPhase(next.kind === "active" ? { kind: "error", message: "Camera error" } : next);
-      }}
+      onStreamError={handleStreamError}
     />
   );
 }
