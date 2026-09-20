@@ -128,7 +128,9 @@
     "permissionsNoMembers": "لا يوجد أعضاء آخرون لتكوين باعد.",
     "permManageOutings": "إنشاء النشاطات",
     "permRecordPayments": "تسجيل من دفع",
-    "permUseTemplates": "استخدام قوالبه"
+    "permUseTemplates": "استخدام قوالبه",
+    "settingsTitle": "إعدادات المجموعة",
+    "settingsSection": "الإعدادات"
   },
   "outing": {
     "balances": "الأرصدة",

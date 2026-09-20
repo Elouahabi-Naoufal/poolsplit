@@ -19,10 +19,8 @@ export default function GroupPermissions({ groupId, members }: {
   const t = useTranslations("group");
 
   return (
-    <div className="mt-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-[14px] font-semibold text-muted">{t("permissionsTitle")}</h2>
-      </div>
+    <div>
+      <div className="text-[12px] font-semibold text-muted uppercase tracking-wide">{t("permissionsTitle")}</div>
       <p className="text-[12px] text-muted mt-1 mb-3">{t("permissionsHint")}</p>
       <div className="ledger">
         {members.length === 0 && (

@@ -121,13 +121,19 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
             <div className="progress-fill navy" style={{ width: `${Math.round((settledOutings / outings.length) * 100)}%` }} />
           </div>
         )}
-        {isOwner && (
-          <div className="mt-5 max-w-md">
-            <details className="rounded-[20px] border border-border p-4">
-              <summary className="flex items-center gap-2 text-[14px] font-medium cursor-pointer text-muted">
-                <IconChevronRight size={13} className="chev" />{t("imageLabel")}
-              </summary>
-              <div className="mt-4">
+        <div className="divider mt-6"></div>
+      </div>
+
+      {isOwner && (
+        <section className="space-y-4 max-w-2xl">
+          <h2 className="section-label">{t("settingsTitle")}</h2>
+          <details className="rounded-[20px] border border-border p-4" open>
+            <summary className="flex items-center gap-2 text-[14px] font-medium cursor-pointer text-muted">
+              <IconChevronRight size={13} className="chev" />{t("settingsSection")}
+            </summary>
+            <div className="mt-4 space-y-5">
+              <div>
+                <div className="text-[12px] font-semibold text-muted uppercase tracking-wide mb-3">{t("imageLabel")}</div>
                 <GroupImageForm
                   groupId={id}
                   currentImage={group.image}
@@ -139,11 +145,25 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
                   saveLabel={tc("save")}
                 />
               </div>
-            </details>
-          </div>
-        )}
-        <div className="divider mt-6"></div>
-      </div>
+              <div className="divider"></div>
+              <GroupPermissions
+                groupId={id}
+                members={members
+                  .filter(m => m.userId !== group.ownerId)
+                  .map(m => ({
+                    userId: m.userId,
+                    displayName: m.user.displayName,
+                    perms: {
+                      canManageOutings: m.canManageOutings,
+                      canRecordPayments: m.canRecordPayments,
+                      canUseTemplates: m.canUseTemplates,
+                    },
+                  }))}
+              />
+            </div>
+          </details>
+        </section>
+      )}
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
         {/* Members */}
@@ -179,23 +199,6 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
               );
             })}
           </div>
-
-          {isOwner && (
-            <GroupPermissions
-              groupId={id}
-              members={members
-                .filter(m => m.userId !== group.ownerId)
-                .map(m => ({
-                  userId: m.userId,
-                  displayName: m.user.displayName,
-                  perms: {
-                    canManageOutings: m.canManageOutings,
-                    canRecordPayments: m.canRecordPayments,
-                    canUseTemplates: m.canUseTemplates,
-                  },
-                }))}
-            />
-          )}
 
           {isOwner && (
             <div className="pt-3 border-t border-border mt-4">

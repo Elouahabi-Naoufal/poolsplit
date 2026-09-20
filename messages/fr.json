@@ -128,7 +128,9 @@
     "permissionsNoMembers": "Aucun autre membre à configurer pour l’instant.",
     "permManageOutings": "Créer des sorties",
     "permRecordPayments": "Enregistrer qui a payé",
-    "permUseTemplates": "Utiliser ses modèles"
+    "permUseTemplates": "Utiliser ses modèles",
+    "settingsTitle": "Paramètres du groupe",
+    "settingsSection": "Paramètres"
   },
   "outing": {
     "balances": "Soldes",

@@ -129,7 +129,9 @@
     "permissionsNoMembers": "No other members to configure yet.",
     "permManageOutings": "Set up outings",
     "permRecordPayments": "Record who paid",
-    "permUseTemplates": "Use their templates"
+    "permUseTemplates": "Use their templates",
+    "settingsTitle": "Group settings",
+    "settingsSection": "Settings"
   },
   "outing": {
     "balances": "Balances",
