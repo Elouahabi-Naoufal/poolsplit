@@ -244,7 +244,7 @@
     "uploadPic": "Upload picture",
     "changePic": "Change picture",
     "removePic": "Remove",
-    "picHint": "JPG or PNG, under 3 MB.",
+    "picHint": "Any photo up to 10 MB — compressed automatically.",
     "language": "Language",
     "languageHint": "Applies immediately and is remembered on this device."
   },
@@ -357,7 +357,7 @@
     "updateProductFailed": "Could not update this product. Please try again.",
     "acceptInviteFailed": "Could not accept this invitation. Please try again.",
     "avatarImageOnly": "Profile picture must be an image file.",
-    "avatarTooBig": "Profile picture must be under {maxMB} MB. Try taking a screenshot of the image and uploading that instead.",
+    "avatarTooBig": "Profile picture must be under {maxMB} MB.",
     "invalidCredentials": "Invalid credentials.",
     "invalidInput": "Invalid input.",
     "userExists": "A user with this username already exists.",

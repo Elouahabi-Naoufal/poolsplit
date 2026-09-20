@@ -55,3 +55,6 @@ prisma/data
 # ide
 .vscode
 .idea
+
+# local generated artifacts
+/expense-app-architecture*

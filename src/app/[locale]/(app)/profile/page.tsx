@@ -7,7 +7,7 @@ import { avatarSrc } from "@/lib/avatar";
 import { getTranslations } from "next-intl/server";
 import type { AppLocale } from "@/i18n/routing";
 
-const MAX_AVATAR_MB = 3;
+const MAX_AVATAR_MB = 10;
 
 export default async function ProfilePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -40,16 +40,16 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
         <div className="space-y-4">
           <h2 className="text-[15px] font-semibold">{t("editProfile")}</h2>
           <ProfileForm
-          currentAvatar={avatarSrc(user)}
-          displayName={user.displayName}
-          uploadLabel={t("uploadPic")}
-          changeLabel={t("changePic")}
-          removeLabel={t("removePic")}
-          hint={t("picHint")}
-          maxMB={MAX_AVATAR_MB}
-          displayNameLabel={t("displayName")}
-          saveLabel={t("save")}
-        />
+            currentAvatar={avatarSrc(user)}
+            displayName={user.displayName}
+            uploadLabel={t("uploadPic")}
+            changeLabel={t("changePic")}
+            removeLabel={t("removePic")}
+            hint={t("picHint")}
+            maxMB={MAX_AVATAR_MB}
+            displayNameLabel={t("displayName")}
+            saveLabel={t("save")}
+          />
         </div>
 
         <LanguageSwitcher />

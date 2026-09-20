@@ -11,15 +11,29 @@ const updateProfileSchema = z.object({
   displayName: z.string().min(2).max(50),
 });
 
-const MAX_AVATAR_MB = 3;
+export type ProfileState = { success?: boolean; error?: string };
 
-function avatarPath(userId: string): string {
-  return path.join(process.cwd(), "data", "avatars", `${userId}.png`);
+const MAX_AVATAR_MB = 3;
+const AVATAR_EXTS = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const;
+
+function avatarDir() {
+  return path.join(process.cwd(), "data", "avatars");
+}
+
+function avatarFile(userId: string, ext: string) {
+  return path.join(avatarDir(), `${userId}.${ext}`);
 }
 
 async function ensureAvatarDir() {
-  const dir = path.join(process.cwd(), "data", "avatars");
-  await fs.promises.mkdir(dir, { recursive: true });
+  await fs.promises.mkdir(avatarDir(), { recursive: true });
+}
+
+async function removeAvatarFiles(userId: string) {
+  for (const ext of Object.values(AVATAR_EXTS)) {
+    try {
+      await fs.promises.unlink(avatarFile(userId, ext));
+    } catch {}
+  }
 }
 
 function isUploadedFile(
@@ -37,48 +51,52 @@ function isUploadedFile(
   );
 }
 
-export async function updateProfileAction(formData: FormData) {
+export async function updateProfileAction(
+  _prevState: ProfileState,
+  formData: FormData,
+): Promise<ProfileState> {
   try {
     const session = await requireSession();
     const t = await getTranslations("errors");
-    const raw = { displayName: formData.get("displayName") as string };
-    const parsed = updateProfileSchema.safeParse(raw);
+    const parsed = updateProfileSchema.safeParse({
+      displayName: formData.get("displayName"),
+    });
     if (!parsed.success) return { error: t("displayNameLen") };
 
     const removeAvatar = formData.get("removeAvatar") === "on";
     const rawFile = formData.get("avatarFile");
     const file = isUploadedFile(rawFile) ? rawFile : null;
 
-    if (removeAvatar) {
-      const p = avatarPath(session.userId);
-      try {
-        await fs.promises.unlink(p);
-      } catch {}
-    } else if (file && file.size > 0) {
-      try {
-        if (!file.type.startsWith("image/")) return { error: t("avatarImageOnly") };
-        const mb = file.size / 1024 / 1024;
-        if (mb > MAX_AVATAR_MB) {
-          return {
-            error: `Image is ${mb.toFixed(1)} MB — must be under ${MAX_AVATAR_MB} MB. Take a screenshot and upload that instead.`,
-          };
-        }
-        await ensureAvatarDir();
-        const buffer = Buffer.from(await file.arrayBuffer());
-        await fs.promises.writeFile(avatarPath(session.userId), buffer);
-      } catch {
-        return { error: "Could not save the image. Try taking a screenshot and uploading that instead (it will be smaller)." };
+    if (file && file.size > 0) {
+      const extKey = file.type as keyof typeof AVATAR_EXTS;
+      if (!(extKey in AVATAR_EXTS)) return { error: t("avatarImageOnly") };
+      const mb = file.size / 1024 / 1024;
+      if (mb > MAX_AVATAR_MB) {
+        return { error: t("avatarTooBig", { maxMB: MAX_AVATAR_MB }) };
       }
+      await ensureAvatarDir();
+      await removeAvatarFiles(session.userId);
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await fs.promises.writeFile(avatarFile(session.userId, AVATAR_EXTS[extKey]), buffer);
+      await prisma.user.update({
+        where: { id: session.userId },
+        data: {
+          displayName: parsed.data.displayName,
+          avatar: `/api/avatar/${session.userId}?v=${Date.now()}`,
+        },
+      });
+    } else {
+      if (removeAvatar) {
+        await removeAvatarFiles(session.userId);
+      }
+      await prisma.user.update({
+        where: { id: session.userId },
+        data: {
+          displayName: parsed.data.displayName,
+          ...(removeAvatar ? { avatar: null } : {}),
+        },
+      });
     }
-
-    await prisma.user.update({
-      where: { id: session.userId },
-      data: {
-        displayName: parsed.data.displayName,
-        ...(removeAvatar ? { avatar: null } : {}),
-        ...(file && file.size > 0 ? { avatar: `/api/avatar/${session.userId}` } : {}),
-      },
-    });
 
     try {
       revalidatePath("/profile");

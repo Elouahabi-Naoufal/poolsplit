@@ -1,9 +1,7 @@
 "use client";
-import { useActionState } from "react";
+import { useState } from "react";
 import AvatarPicker from "@/components/AvatarPicker";
-import { updateProfileAction } from "@/server/profile/actions";
-
-type ProfileState = { success?: boolean; error?: string };
+import { updateProfileAction, type ProfileState } from "@/server/profile/actions";
 
 export default function ProfileForm({
   currentAvatar,
@@ -26,15 +24,30 @@ export default function ProfileForm({
   displayNameLabel: string;
   saveLabel: string;
 }) {
-  const [state, formAction, pending] = useActionState(
-    updateProfileAction as unknown as (prevState: ProfileState, formData: FormData) => Promise<ProfileState>,
-    {} as ProfileState,
-  );
-  const error = "error" in state && state.error ? state.error : null;
+  const [state, setState] = useState<ProfileState>({});
+  const [pending, setPending] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [savedAt, setSavedAt] = useState(0);
+  const error = state.error ?? null;
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPending(true);
+    const formData = new FormData(event.currentTarget);
+    if (file) formData.set("avatarFile", file, file.name);
+    const result = await updateProfileAction({}, formData);
+    setState(result ?? {});
+    setPending(false);
+    if (result?.success) {
+      setFile(null);
+      setSavedAt(n => n + 1);
+    }
+  }
 
   return (
-    <form action={formAction} className="card-elevated p-6 space-y-5">
+    <form onSubmit={handleSubmit} className="card-elevated p-6 space-y-5">
       <AvatarPicker
+        key={savedAt}
         currentAvatar={currentAvatar}
         displayName={displayName}
         uploadLabel={uploadLabel}
@@ -42,6 +55,7 @@ export default function ProfileForm({
         removeLabel={removeLabel}
         hint={hint}
         maxMB={maxMB}
+        onFile={setFile}
       />
       <div className="space-y-1.5">
         <label className="text-[13px] font-medium text-muted">{displayNameLabel}</label>

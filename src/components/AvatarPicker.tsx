@@ -1,6 +1,43 @@
 "use client";
 import { useRef, useState } from "react";
 
+const MAX_DIM = 512;
+const QUALITY = 0.8;
+
+async function compressAvatarImage(file: File): Promise<File> {
+  if (file.size <= 200 * 1024) return file;
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error("decode"));
+      el.src = url;
+    });
+    const scale = Math.min(1, MAX_DIM / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(img, 0, 0, w, h);
+    for (const type of ["image/webp", "image/jpeg"]) {
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, QUALITY));
+      if (blob && blob.size > 0 && blob.size < file.size) {
+        const ext = type === "image/webp" ? "webp" : "jpg";
+        return new File([blob], `avatar.${ext}`, { type });
+      }
+    }
+    return file;
+  } catch {
+    return file;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 export default function AvatarPicker({
   currentAvatar,
   displayName,
@@ -8,7 +45,8 @@ export default function AvatarPicker({
   changeLabel,
   removeLabel,
   hint,
-  maxMB = 2,
+  maxMB = 10,
+  onFile,
 }: {
   currentAvatar: string | null;
   displayName: string;
@@ -17,11 +55,13 @@ export default function AvatarPicker({
   removeLabel: string;
   hint: string;
   maxMB?: number;
+  onFile?: (file: File | null) => void;
 }) {
   const [preview, setPreview] = useState<string | null>(null);
   const [removed, setRemoved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const previewUrlRef = useRef<string | null>(null);
 
   const shown = removed ? null : preview ?? currentAvatar;
   const maxBytes = maxMB * 1024 * 1024;
@@ -30,17 +70,26 @@ export default function AvatarPicker({
     setError(null);
     if (!file) {
       setPreview(null);
-      return;
-    }
-    if (file.size > maxBytes) {
-      setError(`Image is ${(file.size / 1024 / 1024).toFixed(1)} MB — must be under ${maxMB} MB. Take a screenshot of the picture and upload the screenshot instead (it will be smaller).`);
-      setPreview(null);
+      setRemoved(false);
+      onFile?.(null);
       return;
     }
     setRemoved(false);
-    const reader = new FileReader();
-    reader.onload = () => setPreview(reader.result as string);
-    reader.readAsDataURL(file);
+    if (file.size > maxBytes) {
+      setError(`Photo is ${(file.size / 1024 / 1024).toFixed(1)} MB — must be under ${maxMB} MB.`);
+      if (inputRef.current) inputRef.current.value = "";
+      setPreview(null);
+      onFile?.(null);
+      return;
+    }
+    void (async () => {
+      const out = await compressAvatarImage(file);
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+      const url = URL.createObjectURL(out);
+      previewUrlRef.current = url;
+      setPreview(url);
+      onFile?.(out);
+    })();
   };
 
   return (
@@ -74,7 +123,10 @@ export default function AvatarPicker({
                   setRemoved(true);
                   setPreview(null);
                   setError(null);
+                  if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+                  previewUrlRef.current = null;
                   if (inputRef.current) inputRef.current.value = "";
+                  onFile?.(null);
                 }}
                 className="btn-ghost text-danger"
               >
