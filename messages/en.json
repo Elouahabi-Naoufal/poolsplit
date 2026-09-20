@@ -10,7 +10,8 @@
     "new": "New",
     "admin": "Admin",
     "logout": "Logout",
-    "mainNav": "Primary navigation"
+    "mainNav": "Primary navigation",
+    "templates": "Templates"
   },
   "common": {
     "breadcrumb": "Breadcrumb",
@@ -51,7 +52,6 @@
     "createAccount": "Create account",
     "createSubtitle": "Join PoolSplit — your public ID will be used for invites",
     "displayName": "Display Name",
-    "username": "Username",
     "createBtn": "Create account",
     "haveAccount": "Already have account?",
     "loginLink": "Login"
@@ -118,7 +118,12 @@
     "headStats": "{m, plural, one {# member} other {# members}} · {o, plural, one {# outing} other {# outings}} · {spent} spent · {s}/{t} settled",
     "outingMeta": "{p, plural, one {# participant} other {# participants}} · {a, plural, one {# activity} other {# activities}} · {spent}",
     "createOutingBtn": "Create Outing",
-    "remove": "Remove"
+    "remove": "Remove",
+    "imageLabel": "Group image",
+    "imageUpload": "Upload image",
+    "imageChange": "Change image",
+    "imageRemove": "Remove image",
+    "imageHint": "JPG, PNG or WebP up to 5 MB. Members will see it in the group list and header."
   },
   "outing": {
     "balances": "Balances",
@@ -185,7 +190,10 @@
     "deleteItem": "Delete {name}",
     "deletePayment": "Delete payment",
     "namePh": "Name",
-    "unitLabel": "Unit"
+    "unitLabel": "Unit",
+    "useTemplate": "Use a template",
+    "selectTemplate": "Select a template…",
+    "saveTemplate": "Save as template"
   },
   "settlement": {
     "title": "Settlement",
@@ -231,7 +239,12 @@
     "expBackMe": "You paid {paid} and your share was {share}, so you get back {amount}.",
     "expBackOther": "{name} paid {paid} and their share was {share}, so they get back {amount}.",
     "expEvenMe": "You are settled up — paid exactly your share of {share}.",
-    "expEvenOther": "{name} is settled up — paid exactly their share of {share}."
+    "expEvenOther": "{name} is settled up — paid exactly their share of {share}.",
+    "breakdown": "How the numbers add up",
+    "net": "Net",
+    "splitEach": "split {n} -> {share} each",
+    "noPaidLine": "Made no payments in this outing.",
+    "noRespLine": "Is responsible for nothing."
   },
   "profile": {
     "title": "Profile",
@@ -400,6 +413,35 @@
     "cantRemoveSelf": "You cannot remove yourself.",
     "ownerCantLeave": "The owner cannot leave.",
     "notPlanning": "Outing is not in planning.",
-    "onlyOwnerFinalize": "Only the owner can finalize."
+    "onlyOwnerFinalize": "Only the owner can finalize.",
+    "templateNameRequired": "Please give the template a name.",
+    "templateMissing": "Template not found.",
+    "templateNotOwner": "You can only manage your own templates.",
+    "templateAlreadyExists": "You already have a template with this name and type.",
+    "templateProductMissing": "Product not found in template.",
+    "groupAdminOnlyTemplates": "Templates can only be used by the admin of the group.",
+    "groupImageOnly": "Group image must be an image file.",
+    "groupImageTooBig": "Group image must be under {maxMB} MB."
+  },
+  "templates": {
+    "title": "Activity templates",
+    "subtitle": "Reuse the same activity and its products without retyping them.",
+    "note": "You can only use a template when you are the admin of the group.",
+    "newTemplate": "New template",
+    "templateNamePh": "Template name",
+    "fixedOpt": "Fixed price",
+    "variableOpt": "Variable price",
+    "products": "Products",
+    "addProduct": "Add product",
+    "addProductBtn": "Add",
+    "productNamePh": "Product name",
+    "unitPh": "Unit (e.g. kg, piece)",
+    "pricePh": "Price (DH)",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "empty": "No templates yet",
+    "emptySub": "Create one from scratch or use “Save as template” on an existing activity.",
+    "deleteConfirm": "Delete this template?"
   }
 }

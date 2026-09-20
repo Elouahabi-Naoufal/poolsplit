@@ -10,7 +10,8 @@
     "new": "Nouveau",
     "admin": "Admin",
     "logout": "Déconnexion",
-    "mainNav": "Navigation principale"
+    "mainNav": "Navigation principale",
+    "templates": "Modèles"
   },
   "common": {
     "breadcrumb": "Fil d'Ariane",
@@ -43,7 +44,7 @@
   "auth": {
     "welcomeBack": "Bon retour",
     "loginSubtitle": "Connecte-toi à ton compte PoolSplit",
-    "username": "Nom d'utilisateur",
+    "username": "Pseudo",
     "password": "Mot de passe",
     "login": "Se connecter",
     "noAccount": "Pas de compte ?",
@@ -51,7 +52,6 @@
     "createAccount": "Créer un compte",
     "createSubtitle": "Rejoins PoolSplit — ton ID public servira pour les invitations",
     "displayName": "Nom affiché",
-    "username": "Pseudo",
     "createBtn": "Créer le compte",
     "haveAccount": "Déjà un compte ?",
     "loginLink": "Se connecter"
@@ -117,7 +117,12 @@
     "headStats": "{m, plural, one {# membre} other {# membres}} · {o, plural, one {# sortie} other {# sorties}} · {spent} dépensés · {s}/{t} soldées",
     "outingMeta": "{p, plural, one {# participant} other {# participants}} · {a, plural, one {# activité} other {# activités}} · {spent}",
     "createOutingBtn": "Créer la sortie",
-    "remove": "Retirer"
+    "remove": "Retirer",
+    "imageLabel": "Image du groupe",
+    "imageUpload": "Importer une image",
+    "imageChange": "Changer l’image",
+    "imageRemove": "Supprimer l’image",
+    "imageHint": "JPG, PNG ou WebP jusqu’à 5 Mo. Les membres la verront dans la liste et l’en-tête du groupe."
   },
   "outing": {
     "balances": "Soldes",
@@ -184,7 +189,10 @@
     "deleteItem": "Supprimer {name}",
     "deletePayment": "Supprimer le paiement",
     "namePh": "Nom",
-    "unitLabel": "Unité"
+    "unitLabel": "Unité",
+    "useTemplate": "Utiliser un modèle",
+    "selectTemplate": "Choisir un modèle…",
+    "saveTemplate": "Enregistrer comme modèle"
   },
   "settlement": {
     "title": "Règlement",
@@ -230,9 +238,14 @@
     "expBackMe": "Tu as payé {paid} et ta part était de {share}, donc tu récupères {amount}.",
     "expBackOther": "{name} a payé {paid} et sa part était de {share}, il récupère donc {amount}.",
     "expEvenMe": "Tu es en règle — tu as payé exactement ta part de {share}.",
-    "expEvenOther": "{name} est en règle — a payé exactement sa part de {share}."
+    "expEvenOther": "{name} est en règle — a payé exactement sa part de {share}.",
+    "breakdown": "Comment les chiffres se calculent",
+    "net": "Net",
+    "splitEach": "{n} parts -> {share} chacune",
+    "noPaidLine": "N.a effectué aucun paiement dans cette sortie.",
+    "noRespLine": "N.a aucune charge dans cette sortie."
   },
-"profile": {
+  "profile": {
     "title": "Profil",
     "publicId": "ID Public",
     "username": "Nom d'utilisateur",
@@ -400,7 +413,34 @@
     "ownerCantLeave": "L'admin ne peut pas partir.",
     "notPlanning": "La sortie n'est plus en préparation.",
     "onlyOwnerFinalize": "Seul l'admin peut finaliser.",
-    "groupNameLen": "Le nom du groupe doit faire 2 à 100 caractères.",
-    "groupDescLen": "La description doit faire moins de 500 caractères."
+    "templateNameRequired": "Donne un nom au modèle.",
+    "templateMissing": "Modèle introuvable.",
+    "templateNotOwner": "Tu ne peux gérer que tes propres modèles.",
+    "templateAlreadyExists": "Tu as déjà un modèle avec ce nom et ce type.",
+    "templateProductMissing": "Produit introuvable dans le modèle.",
+    "groupAdminOnlyTemplates": "Les modèles ne peuvent être utilisés que par l’admin du groupe.",
+    "groupImageOnly": "L’image du groupe doit être un fichier image.",
+    "groupImageTooBig": "L’image du groupe doit faire moins de {maxMB} Mo."
+  },
+  "templates": {
+    "title": "Modèles d’activités",
+    "subtitle": "Réutilise la même activité et ses produits sans tout retaper.",
+    "note": "Tu ne peux utiliser un modèle que si tu es admin du groupe.",
+    "newTemplate": "Nouveau modèle",
+    "templateNamePh": "Nom du modèle",
+    "fixedOpt": "Prix fixe",
+    "variableOpt": "Prix variable",
+    "products": "Produits",
+    "addProduct": "Ajouter un produit",
+    "addProductBtn": "Ajouter",
+    "productNamePh": "Nom du produit",
+    "unitPh": "Unité (ex. kg, pièce)",
+    "pricePh": "Prix (DH)",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "empty": "Aucun modèle pour l’instant",
+    "emptySub": "Crée-en un de zéro ou utilise « Enregistrer comme modèle » sur une activité existante.",
+    "deleteConfirm": "Supprimer ce modèle ?"
   }
 }

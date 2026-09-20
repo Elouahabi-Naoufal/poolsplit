@@ -10,7 +10,8 @@
     "new": "جديد",
     "admin": "إدارة",
     "logout": "تسجيل الخروج",
-    "mainNav": "التنقل الرئيسي"
+    "mainNav": "التنقل الرئيسي",
+    "templates": "النماذج"
   },
   "common": {
     "breadcrumb": "مسار التنقل",
@@ -51,7 +52,6 @@
     "createAccount": "إنشاء حساب",
     "createSubtitle": "انضم إلى PoolSplit — سيُستخدم معرّفك العام للدعوات",
     "displayName": "الاسم المعروض",
-    "username": "اسم المستخدم",
     "createBtn": "إنشاء الحساب",
     "haveAccount": "لديك حساب؟",
     "loginLink": "تسجيل الدخول"
@@ -117,7 +117,12 @@
     "headStats": "{m, plural, zero {لا أعضاء} one {عضو واحد} two {عضوان} few {# أعضاء} other {# عضو}} · {o, plural, zero {لا خرجات} one {خرجة واحدة} two {خرجتان} few {# خرجات} other {# خرجة}} · إنفاق {spent} · {s}/{t} مسوّاة",
     "outingMeta": "{p, plural, zero {لا مشاركين} one {مشارك واحد} two {مشاركان} few {# مشاركين} other {# مشارك}} · {a, plural, zero {لا أنشطة} one {نشاط واحد} two {نشاطان} few {# أنشطة} other {# نشاط}} · {spent}",
     "createOutingBtn": "إنشاء الخرجة",
-    "remove": "إزالة"
+    "remove": "إزالة",
+    "imageLabel": "صورة المجموعة",
+    "imageUpload": "رفع صورة",
+    "imageChange": "تغيير الصورة",
+    "imageRemove": "إزالة الصورة",
+    "imageHint": "JPG أو PNG أو WebP بحد أقصى 5 ميجا. سيراها الأعضاء في القائمة ورأس الصفحة."
   },
   "outing": {
     "balances": "الأرصدة",
@@ -184,7 +189,10 @@
     "deleteItem": "حذف {name}",
     "deletePayment": "حذف الدفعة",
     "namePh": "الاسم",
-    "unitLabel": "الوحدة"
+    "unitLabel": "الوحدة",
+    "useTemplate": "استخدام نموذج",
+    "selectTemplate": "اختر نموذجاً…",
+    "saveTemplate": "حفظ كنموذج"
   },
   "settlement": {
     "title": "التسوية",
@@ -230,9 +238,14 @@
     "expBackMe": "دفعت {paid} وحصتك كانت {share}، إذن تسترد {amount}.",
     "expBackOther": "دفع {name} مبلغ {paid} وحصته كانت {share}، إذن يسترد {amount}.",
     "expEvenMe": "أنت متساوٍ — دفعت حصتك كاملة وهي {share}.",
-    "expEvenOther": "{name} متساوٍ — دفع حصته كاملة وهي {share}."
+    "expEvenOther": "{name} متساوٍ — دفع حصته كاملة وهي {share}.",
+    "breakdown": "كيف تحسب الأرقام",
+    "net": "الصافي",
+    "splitEach": "{n} أشخاص -> {share} لكل واحد",
+    "noPaidLine": "لم دفع أي مبلغ في هذه النزهة.",
+    "noRespLine": "ليس عليه أي تكلفة."
   },
-"profile": {
+  "profile": {
     "title": "الحساب",
     "publicId": "المعرّف العام",
     "editProfile": "تعديل الحساب",
@@ -399,7 +412,34 @@
     "ownerCantLeave": "لا يمكن للمشرف المغادرة.",
     "notPlanning": "الخرجة ليست قيد التخطيط.",
     "onlyOwnerFinalize": "المشرف فقط يمكنه الاعتماد.",
-    "groupNameLen": "يجب أن يكون اسم المجموعة من 2 إلى 100 حرف.",
-    "groupDescLen": "يجب أن يكون الوصف أقل من 500 حرف."
+    "templateNameRequired": "يرجى تسمية النموذج.",
+    "templateMissing": "النموذج غير موجود.",
+    "templateNotOwner": "يمكنك إدارة نماذجك الخاصة فقط.",
+    "templateAlreadyExists": "لديك بالفعل نموذج بنفس الاسم والنوع.",
+    "templateProductMissing": "المنتج غير موجود في النموذج.",
+    "groupAdminOnlyTemplates": "لا يمكن استخدام النماذج إلا من طرف مسؤول المجموعة.",
+    "groupImageOnly": "يجب أن تكون خلفية المجموعة ملف صورة.",
+    "groupImageTooBig": "يجب أن تكون صورة المجموعة أقل من {maxMB} ميجا."
+  },
+  "templates": {
+    "title": "نماذج الأنشطة",
+    "subtitle": "أعد استخدام نفس النشاط ومنتجاته دون إعادة كتابتها.",
+    "note": "لا يمكنك استخدام النموذج إلا عندما تكون مسؤول المجموعة.",
+    "newTemplate": "نموذج جديد",
+    "templateNamePh": "اسم النموذج",
+    "fixedOpt": "سعر ثابت",
+    "variableOpt": "سعر متغير",
+    "products": "المنتجات",
+    "addProduct": "إضافة منتج",
+    "addProductBtn": "إضافة",
+    "productNamePh": "اسم المنتج",
+    "unitPh": "الوحدة (مثل كغ، قطعة)",
+    "pricePh": "السعر (درهم)",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "empty": "لا توجد نماذج بعد",
+    "emptySub": "أنشئ واحداً من الصفر أو استخدم «حفظ كنموذج» على نشاط موجود.",
+    "deleteConfirm": "حذف هذا النموذج؟"
   }
 }

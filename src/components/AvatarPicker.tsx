@@ -47,6 +47,8 @@ export default function AvatarPicker({
   hint,
   maxMB = 10,
   onFile,
+  fileFieldName = "avatarFile",
+  removeFieldName = "removeAvatar",
 }: {
   currentAvatar: string | null;
   displayName: string;
@@ -56,6 +58,8 @@ export default function AvatarPicker({
   hint: string;
   maxMB?: number;
   onFile?: (file: File | null) => void;
+  fileFieldName?: string;
+  removeFieldName?: string;
 }) {
   const [preview, setPreview] = useState<string | null>(null);
   const [removed, setRemoved] = useState(false);
@@ -107,7 +111,7 @@ export default function AvatarPicker({
           <input
             ref={inputRef}
             type="file"
-            name="avatarFile"
+            name={fileFieldName}
             accept="image/*"
             className="hidden"
             onChange={e => handleFile(e.target.files?.[0] ?? null)}
@@ -134,7 +138,7 @@ export default function AvatarPicker({
               </button>
             )}
           </div>
-          <input type="hidden" name="removeAvatar" value={removed ? "on" : ""} />
+          <input type="hidden" name={removeFieldName} value={removed ? "on" : ""} />
           <p className="text-[12px] text-muted">{hint}</p>
         </div>
       </div>

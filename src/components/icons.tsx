@@ -109,6 +109,15 @@ export function IconQr({ size, className }: IconProps) {
   );
 }
 
+export function IconTemplate({ size, className }: IconProps) {
+  return (
+    <Base size={size} className={className}>
+      <path d="M4 3h16v18H4z" />
+      <path d="M8 8h8M8 12h8M8 16h5" />
+    </Base>
+  );
+}
+
 export function IconArrowRight({ size, className }: IconProps) {
   return (
     <Base size={size} className={className}>

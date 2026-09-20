@@ -2,7 +2,7 @@
 import { Link, usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { logoutAction } from "@/server/auth/logout-action";
-import { IconUsers, IconQr, IconPlus } from "@/components/icons";
+import { IconUsers, IconQr, IconPlus, IconTemplate } from "@/components/icons";
 import ThemeToggle from "@/components/ThemeToggle";
 import FriendshipModeToggle from "@/components/FriendshipModeToggle";
 
@@ -45,6 +45,7 @@ export default function AppShell({
   const t = useTranslations("nav");
   const groupsActive = isGroupsActive(pathname);
   const scanActive = pathname.startsWith("/scan");
+  const templatesActive = pathname.startsWith("/templates");
   const profileActive = pathname.startsWith("/profile");
 
   const navRow = (active: boolean) =>
@@ -73,6 +74,9 @@ export default function AppShell({
           </Link>
           <Link href="/scan" className={navRow(scanActive)}>
             <IconQr size={16} />{t("scan")}
+          </Link>
+          <Link href="/templates" className={navRow(templatesActive)}>
+            <IconTemplate size={16} />{t("templates")}
           </Link>
           <Link href="/profile" className={navRow(profileActive)}>
             {user.avatarUrl ? (

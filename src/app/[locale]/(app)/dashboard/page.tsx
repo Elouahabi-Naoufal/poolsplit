@@ -254,7 +254,14 @@ export default async function Dashboard({ params }: { params: Promise<{ locale: 
               {groupsWithStats.map(({ membership, memberCount, outingCount, settledCount, expenseTotal, myNet }) => (
                 <Link key={membership.group.id} href={`/groups/${membership.group.id}`} className="ledger-row">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-9 h-9 rounded-[12px] bg-brand-subtle text-brand flex items-center justify-center flex-shrink-0"><IconUsers size={16} /></div>
+                    <div className="w-9 h-9 rounded-[12px] bg-brand-subtle text-brand flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {membership.group.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={membership.group.image} alt={membership.group.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <IconUsers size={16} />
+                      )}
+                    </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-[14px] truncate">{membership.group.name}</div>
                       <div className="text-[12px] text-muted truncate">{t("groupMeta", { m: memberCount, o: outingCount, spent: formatDH(expenseTotal) })}</div>

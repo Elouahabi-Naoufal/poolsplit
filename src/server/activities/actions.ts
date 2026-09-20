@@ -18,6 +18,7 @@ export async function createActivityAction(formData: FormData) {
   const pricingModel = (formData.get("pricingModel") as string) || "FIXED";
   const notes = ((formData.get("notes") as string) || "").trim() || undefined;
   const participantIds = formData.get("participantIds") as string || "[]";
+  const templateId = (formData.get("templateId") as string) || "";
 
   if (!outingId) return { error: t("outingRequired") };
   if (!name) return { error: t("activityNameRequired") };
@@ -34,6 +35,25 @@ export async function createActivityAction(formData: FormData) {
   });
   if (!participant || participant.role !== "OWNER") {
     return { error: t("onlyOwner") };
+  }
+
+  // If a template was chosen, it may only be used by the group admin (owner),
+  // and it must belong to the current user.
+  let templateProducts: { name: string; unit: string; pricePerUnitCt: number }[] = [];
+  if (templateId) {
+    const template = await prisma.activityTemplate.findUnique({
+      where: { id: templateId },
+      include: { products: true },
+    });
+    if (!template) return { error: t("templateMissing") };
+    if (template.userId !== session.userId) return { error: t("templateNotOwner") };
+    const group = await prisma.group.findUnique({ where: { id: outing.groupId } });
+    if (!group || group.ownerId !== session.userId) return { error: t("groupAdminOnlyTemplates") };
+    templateProducts = template.products.map(p => ({
+      name: p.name,
+      unit: p.unit,
+      pricePerUnitCt: p.pricePerUnitCt,
+    }));
   }
 
   // Explicitly add creator as activity participant
@@ -74,6 +94,13 @@ export async function createActivityAction(formData: FormData) {
     });
   }
 
+  // Clone products from the chosen template
+  if (templateProducts.length > 0) {
+    await prisma.activityProduct.createMany({
+      data: templateProducts.map(p => ({ activityId, ...p })),
+    });
+  }
+
   await logEvent({
     groupId: outing.groupId,
     outingId,
@@ -81,7 +108,7 @@ export async function createActivityAction(formData: FormData) {
     eventType: "ACTIVITY_CREATED",
     entityType: "Activity",
     entityId: activity.id,
-    metadata: { name, pricingModel },
+    metadata: { name, pricingModel, fromTemplate: templateProducts.length > 0 },
   });
 
   revalidatePath(`/groups/${outing.groupId}/outings/${outingId}`);

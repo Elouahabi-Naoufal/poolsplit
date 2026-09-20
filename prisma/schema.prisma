@@ -38,6 +38,7 @@ model User {
   usageConfirmations     UsageConfirmation[]
   activityPayments       ActivityPayment[]
   lineItems              LineItem[]            @relation("UserLineItems")
+  activityTemplates      ActivityTemplate[]
   correctionRequests     CorrectionRequest[]        @relation("CorrectionRequester")
   correctionDecisions    CorrectionRequest[]      @relation("CorrectionDecider")
 
@@ -55,6 +56,7 @@ model Group {
   status      String   @default("PLANNING")
   ownerId     String
   publicToken String?  @unique
+  image       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -312,6 +314,39 @@ model LineItem {
 
   @@index([activityId])
   @@index([userId])
+}
+
+// ──────────────────────────────────────────────────
+// ACTIVITY TEMPLATES — reusable activity definitions
+// ──────────────────────────────────────────────────
+
+model ActivityTemplate {
+  id           String   @id @default(cuid())
+  userId       String
+  name         String
+  pricingModel String   @default("FIXED")
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user     User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products ActivityTemplateProduct[]
+
+  @@index([userId])
+}
+
+model ActivityTemplateProduct {
+  id             String   @id @default(cuid())
+  templateId     String
+  name           String
+  unit           String   @default("unit")
+  pricePerUnitCt Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  template ActivityTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
 }
 
 // ──────────────────────────────────────────────────

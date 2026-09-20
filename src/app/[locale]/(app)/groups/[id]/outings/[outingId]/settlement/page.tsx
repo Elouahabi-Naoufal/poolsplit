@@ -85,6 +85,7 @@ export default async function SettlementPage({ params }: { params: Promise<{ id:
       if (a.pricingModel === "FIXED") {
         let myResp = 0;
         for (const r of a.usageRecords) {
+          if (r.status === "DISPUTED") continue;
           if (r.participants.find((pp: any) => pp.userId === p.userId) && r.participants.length > 0) {
             myResp += Math.floor(r.totalCentimes / r.participants.length);
           }
@@ -95,6 +96,50 @@ export default async function SettlementPage({ params }: { params: Promise<{ id:
       }
     }, 0);
     return { userId: p.userId, displayName: p.user.displayName, totalPaid: paid, totalResponsibility: resp, netBalance: paid - resp };
+  });
+
+  // Per-member, per-activity breakdown explaining where every number comes from.
+  const breakdowns = allParticipants.map(p => {
+    const rows = activities.map(a => {
+      const fixedShares: { productName: string; quantity: number; totalCentimes: number; n: number; share: number }[] = [];
+      const items: { description: string; priceCentimes: number }[] = [];
+      let memberResp = 0;
+      let memberPaidAct = 0;
+
+      if (a.pricingModel === "FIXED") {
+        for (const r of a.usageRecords) {
+          if (r.status === "DISPUTED") continue;
+          const n = r.participants.length;
+          if (n === 0) continue;
+          const product = a.products.find((pr: any) => pr.id === r.productId);
+          if (r.participants.some((pp: any) => pp.userId === p.userId)) {
+            const share = Math.floor(r.totalCentimes / n);
+            memberResp += share;
+            fixedShares.push({
+              productName: product?.name ?? "?",
+              quantity: r.quantity,
+              totalCentimes: r.totalCentimes,
+              n,
+              share,
+            });
+          }
+        }
+      } else {
+        for (const l of a.lineItems) {
+          if (l.userId === p.userId) {
+            items.push({ description: l.description, priceCentimes: l.priceCentimes });
+            memberResp += l.priceCentimes;
+          }
+        }
+      }
+
+      for (const pay of a.payments) {
+        if (pay.userId === p.userId) memberPaidAct += pay.amountCentimes;
+      }
+
+      return { activityName: a.name, pricingModel: a.pricingModel, memberResp, memberPaidAct, fixedShares, items };
+    });
+    return { userId: p.userId, rows };
   });
 
   const me = memberBalances.find(b => b.userId === session.userId);
@@ -207,19 +252,75 @@ export default async function SettlementPage({ params }: { params: Promise<{ id:
           </section>
         )}
 
-        {/* Why this is fair */}
+        {/* How the numbers add up */}
         <section className="space-y-1">
-          <h3 className="section-label">{t("whyFair")}</h3>
-          <div className="ledger">
-            {memberBalances.map(b => {
-              const isMe = b.userId === session.userId;
+          <h3 className="section-label">{t("breakdown")}</h3>
+          <div className="space-y-3">
+            {breakdowns.map(bd => {
+              const bal = memberBalances.find(mb => mb.userId === bd.userId);
+              if (!bal) return null;
+              const involved = bd.rows.filter(r => r.memberResp > 0 || r.memberPaidAct > 0);
+              if (involved.length === 0 && bal.netBalance === 0) return null;
+              const paidRows = involved.filter(r => r.memberPaidAct > 0);
+              const respRows = involved.filter(r => r.memberResp > 0);
               return (
-                <div key={b.userId} className="py-2.5 text-[14px] leading-relaxed">
-                  {b.netBalance === 0
-                    ? t(isMe ? "expEvenMe" : "expEvenOther", { name: b.displayName, share: formatDH(b.totalResponsibility) })
-                    : b.netBalance < 0
-                      ? t(isMe ? "expOweMe" : "expOweOther", { name: b.displayName, paid: formatDH(b.totalPaid), share: formatDH(b.totalResponsibility), amount: formatDH(-b.netBalance) })
-                      : t(isMe ? "expBackMe" : "expBackOther", { name: b.displayName, paid: formatDH(b.totalPaid), share: formatDH(b.totalResponsibility), amount: formatDH(b.netBalance) })}
+                <div key={bd.userId} className="ledger p-4 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-[14px] min-w-0">{bal.displayName}</span>
+                    <span className={`money text-[14px] font-semibold flex-shrink-0 ${bal.netBalance > 0 ? "text-success" : bal.netBalance < 0 ? "text-danger" : "text-muted"}`}>
+                      {t("net")} {formatDH(bal.netBalance)}
+                    </span>
+                  </div>
+                  <div className="text-[13px]">
+                    {bal.netBalance > 0 ? t("receiveDiff") : bal.netBalance < 0 ? t("payDiff") : t("settledUpYou")}
+                  </div>
+                  {paidRows.length > 0 && (
+                    <div className="text-[13px] space-y-0.5">
+                      <div className="section-label !text-[11px]">{t("paid")} · <span className="money">{formatDH(bal.totalPaid)}</span></div>
+                      {paidRows.map(r => (
+                        <div key={r.activityName} className="flex items-center justify-between gap-2">
+                          <span className="min-w-0 truncate">{r.activityName}</span>
+                          <span className="money">{formatDH(r.memberPaidAct)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {respRows.length > 0 && (
+                    <div className="text-[13px] space-y-0.5">
+                      <div className="section-label !text-[11px]">{t("owes")} · <span className="money">{formatDH(bal.totalResponsibility)}</span></div>
+                      {respRows.map(r => (
+                        <div key={r.activityName} className="space-y-0.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="min-w-0 truncate">
+                              {r.activityName} <span className="text-muted text-[11px]">({r.pricingModel === "FIXED" ? tc("fixed") : tc("variable")})</span>
+                            </span>
+                            <span className="money">{formatDH(r.memberResp)}</span>
+                          </div>
+                          {r.pricingModel === "FIXED"
+                            ? r.fixedShares.map((s, i) => (
+                                <div key={i} className="flex items-center justify-between gap-2 text-[12px] text-muted pl-3">
+                                  <span className="min-w-0">
+                                    {s.productName} × {s.quantity} = {formatDH(s.totalCentimes)}
+                                  </span>
+                                  <span>{t("splitEach", { n: s.n, share: formatDH(s.share) })}</span>
+                                </div>
+                              ))
+                            : r.items.map(it => (
+                                <div key={it.description} className="flex items-center justify-between gap-2 text-[12px] text-muted pl-3">
+                                  <span className="min-w-0 truncate">{it.description}</span>
+                                  <span className="money">{formatDH(it.priceCentimes)}</span>
+                                </div>
+                              ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {paidRows.length === 0 && involved.length > 0 && (
+                    <div className="text-[12px] text-muted">{t("noPaidLine")}</div>
+                  )}
+                  {respRows.length === 0 && involved.length > 0 && (
+                    <div className="text-[12px] text-muted">{t("noRespLine")}</div>
+                  )}
                 </div>
               );
             })}

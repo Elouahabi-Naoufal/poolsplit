@@ -8,6 +8,8 @@ import { getTranslations } from "next-intl/server";
 import { logEvent } from "@/server/audit";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import fs from "fs";
+import path from "path";
 
 const createGroupSchema = z.object({
   name: z.string().min(2).max(100),
@@ -145,4 +147,90 @@ export async function removeMemberAction(groupId: string, userId: string) {
   });
   revalidatePath(`/groups/${groupId}`);
   return { success: true };
+}
+
+// ── Group image ──────────────────────────────────────────────
+
+const MAX_GROUP_IMAGE_MB = 5;
+const GROUP_IMAGE_EXTS = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const;
+
+function groupImageDir() {
+  return path.join(process.cwd(), "data", "group-images");
+}
+
+function groupImageFile(groupId: string, ext: string) {
+  return path.join(groupImageDir(), `${groupId}.${ext}`);
+}
+
+async function ensureGroupImageDir() {
+  await fs.promises.mkdir(groupImageDir(), { recursive: true });
+}
+
+async function removeGroupImageFiles(groupId: string) {
+  for (const ext of Object.values(GROUP_IMAGE_EXTS)) {
+    try {
+      await fs.promises.unlink(groupImageFile(groupId, ext));
+    } catch {}
+  }
+}
+
+function isGroupImageUploadFile(value: unknown): value is File & { arrayBuffer: () => Promise<ArrayBuffer> } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "size" in value &&
+    typeof (value as { size: unknown }).size === "number" &&
+    "type" in value &&
+    typeof (value as { type: unknown }).type === "string" &&
+    "arrayBuffer" in value &&
+    typeof (value as { arrayBuffer: unknown }).arrayBuffer === "function"
+  );
+}
+
+export async function updateGroupImageAction(
+  _prevState: { success?: boolean; error?: string },
+  formData: FormData,
+): Promise<{ success?: boolean; error?: string }> {
+  try {
+    const session = await requireSession();
+    const t = await getTranslations("errors");
+    const groupId = formData.get("groupId") as string;
+    const group = await prisma.group.findUnique({ where: { id: groupId } });
+    if (!group) return { error: t("groupMissing") };
+    if (group.ownerId !== session.userId) return { error: t("onlyOwner") };
+
+    const removeImage = formData.get("removeGroupImage") === "on";
+    const rawFile = formData.get("groupImageFile");
+    const file = isGroupImageUploadFile(rawFile) ? rawFile : null;
+
+    if (file && file.size > 0) {
+      const extKey = file.type as keyof typeof GROUP_IMAGE_EXTS;
+      if (!(extKey in GROUP_IMAGE_EXTS)) return { error: t("groupImageOnly") };
+      const mb = file.size / 1024 / 1024;
+      if (mb > MAX_GROUP_IMAGE_MB) {
+        return { error: t("groupImageTooBig", { maxMB: MAX_GROUP_IMAGE_MB }) };
+      }
+      await ensureGroupImageDir();
+      await removeGroupImageFiles(group.id);
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await fs.promises.writeFile(groupImageFile(group.id, GROUP_IMAGE_EXTS[extKey]), buffer);
+      await prisma.group.update({
+        where: { id: group.id },
+        data: { image: `/api/group-image/${group.id}?v=${Date.now()}` },
+      });
+    } else if (removeImage) {
+      await removeGroupImageFiles(group.id);
+      await prisma.group.update({ where: { id: group.id }, data: { image: null } });
+    }
+
+    try {
+      revalidatePath(`/groups/${group.id}`);
+      revalidatePath("/dashboard");
+    } catch {}
+
+    return { success: true };
+  } catch (e) {
+    console.error("[updateGroupImageAction] unexpected failure:", e);
+    return { error: "Something went wrong. Please try again." };
+  }
 }

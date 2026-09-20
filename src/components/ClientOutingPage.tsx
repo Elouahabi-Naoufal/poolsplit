@@ -24,6 +24,7 @@ import {
 } from "@/server/outings/actions";
 import QrInvite from "@/components/QrInvite";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { saveActivityAsTemplateAction } from "@/server/templates/actions";
 import { Link } from "@/i18n/navigation";
 import { redirect } from "next/navigation";
 import { IconCheck, IconX, IconPencil, IconChevronRight, IconReceipt, IconChevronDown } from "@/components/icons";
@@ -186,6 +187,46 @@ function AddItemForm({ activity, userId, summary, descriptionPh }: {
   );
 }
 
+function NewActivityForm({ outingId, templates }: { outingId: string; templates: any[] }) {
+  const t = useTranslations("outing");
+  const [templateId, setTemplateId] = useState("");
+  const [name, setName] = useState("");
+  const [pricingModel, setPricingModel] = useState("FIXED");
+  const onPickTemplate = (value: string) => {
+    setTemplateId(value);
+    const tpl = templates.find(tt => tt.id === value);
+    if (tpl) {
+      setName(tpl.name);
+      setPricingModel(tpl.pricingModel);
+    }
+  };
+  return (
+    <div className="card-elevated p-5">
+      <h3 className="text-[14px] font-semibold mb-3">{t("newActivity")}</h3>
+      <WForm action={async (prevState, formData) => await createActivityAction(formData)} initialState={{}} className="space-y-3">
+        <input type="hidden" name="outingId" value={outingId} />
+        {templates.length > 0 && (
+          <select value={templateId} onChange={(e) => onPickTemplate(e.target.value)} className="input">
+            <option value="">{t("selectTemplate")}</option>
+            {templates.map(tpl => (
+              <option key={tpl.id} value={tpl.id}>{tpl.name} ({tpl.products.length} {t("products")})</option>
+            ))}
+          </select>
+        )}
+        {templateId && <div className="text-[12px] text-muted">{t("useTemplate")}</div>}
+        <input name="templateId" type="hidden" value={templateId} />
+        <input name="name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("activityNamePh")} required className="input" />
+        <select name="pricingModel" value={pricingModel} onChange={(e) => setPricingModel(e.target.value)} className="input">
+          <option value="FIXED">{t("fixedOpt")}</option>
+          <option value="VARIABLE">{t("variableOpt")}</option>
+        </select>
+        <input name="notes" placeholder={t("notesPh")} className="input" />
+        <SubmitBtn label={t("createActivity")} />
+      </WForm>
+    </div>
+  );
+}
+
 function SplitBar({ paid, responsibility }: { paid: number; responsibility: number }) {
   const t = useTranslations("outing");
   const max = Math.max(paid, responsibility, 1);
@@ -213,13 +254,14 @@ export default function ClientOutingPage({
   groupId, outingId, isOwner, sessionUserId,
   participants, usersMap, activities, activityStats,
   memberBalances, totalResponsibility, totalPaid, allActivitiesClosed, hasSettlement, outing,
-  groupName,
+  groupName, templates, isGroupAdmin,
 }: {
   groupId: string; outingId: string; isOwner: boolean; sessionUserId: string;
   participants: any[]; usersMap: Map<string, string>; activities: any[]; activityStats: any[]; memberBalances: any[];
   totalResponsibility: number; totalPaid: number; allActivitiesClosed: boolean;
   hasSettlement: boolean; outing: any;
   groupName?: string;
+  templates?: any[]; isGroupAdmin?: boolean;
 }) {
   const netDiff = totalResponsibility - totalPaid;
   const t = useTranslations("outing");
@@ -311,6 +353,7 @@ export default function ClientOutingPage({
                   outingId={outingId}
                   groupId={groupId}
                   isOwner={isOwner}
+                  isGroupAdmin={!!isGroupAdmin}
                   participants={participants}
                   usersMap={usersMap}
                   userId={sessionUserId}
@@ -322,19 +365,7 @@ export default function ClientOutingPage({
           )}
 
           {isOwner && outing.status !== "SETTLED" && (
-            <div className="card-elevated p-5">
-              <h3 className="text-[14px] font-semibold mb-3">{t("newActivity")}</h3>
-              <WForm action={async (prevState, formData) => await createActivityAction(formData)} initialState={{}} className="space-y-3">
-                <input type="hidden" name="outingId" value={outingId} />
-                <input name="name" placeholder={t("activityNamePh")} required className="input" />
-                <select name="pricingModel" className="input">
-                  <option value="FIXED">{t("fixedOpt")}</option>
-                  <option value="VARIABLE">{t("variableOpt")}</option>
-                </select>
-                <input name="notes" placeholder={t("notesPh")} className="input" />
-                <SubmitBtn label={t("createActivity")} />
-              </WForm>
-            </div>
+            <NewActivityForm outingId={outingId} templates={isGroupAdmin ? templates ?? [] : []} />
           )}
         </section>
           </div>
@@ -409,8 +440,8 @@ function StatusTag({ status }: { status: string }) {
   );
 }
 
-function ActivityCard({ activity, outingId, groupId, isOwner, participants, usersMap, userId, expanded, onToggle }: {
-  activity: any; outingId: string; groupId: string; isOwner: boolean;
+function ActivityCard({ activity, outingId, groupId, isOwner, isGroupAdmin, participants, usersMap, userId, expanded, onToggle }: {
+  activity: any; outingId: string; groupId: string; isOwner: boolean; isGroupAdmin: boolean;
   participants: any[]; usersMap: Map<string, string>; userId: string;
   expanded: boolean; onToggle: () => void;
 }) {
@@ -465,6 +496,13 @@ function ActivityCard({ activity, outingId, groupId, isOwner, participants, user
       {expanded && (
         <div className="px-5 pb-5 space-y-4 animate-in border-t border-border pt-4">
           <SplitBar paid={activity.paid} responsibility={activity.responsibility} />
+          {isGroupAdmin && (
+            <div className="flex justify-end">
+              <WForm action={async () => await saveActivityAsTemplateAction(activity.id)} initialState={{}}>
+                <SubmitBtn label={t("saveTemplate")} variant="ghost" />
+              </WForm>
+            </div>
+          )}
           {activity.usageRecords.filter((r: any) => r.status !== "CONFIRMED" && r.status !== "DISPUTED").length > 0 && (
             <div className="flex gap-2 flex-wrap">
               {isOwner && (

@@ -26,6 +26,14 @@ export default async function OutingPage({ params }: { params: Promise<{ id: str
   }
 
   const isOwner = participant.role === "OWNER";
+  const isGroupAdmin = group.ownerId === session.userId;
+  const templates = isGroupAdmin
+    ? await prisma.activityTemplate.findMany({
+        where: { userId: session.userId },
+        include: { products: true },
+        orderBy: { updatedAt: "desc" },
+      })
+    : [];
 
   const participants = await prisma.outingParticipant.findMany({ where: { outingId }, include: { user: true } });
   const usersMap = new Map(participants.map(p => [p.userId, p.user.displayName]));
@@ -100,6 +108,8 @@ export default async function OutingPage({ params }: { params: Promise<{ id: str
       hasSettlement={!!hasSettlement}
       outing={outing}
       groupName={group.name}
+      templates={templates}
+      isGroupAdmin={isGroupAdmin}
     />
   );
 }

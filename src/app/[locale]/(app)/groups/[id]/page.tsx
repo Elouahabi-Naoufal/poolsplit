@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import QrInvite from "@/components/QrInvite";
+import GroupImageForm from "@/components/GroupImageForm";
 import { IconChevronRight } from "@/components/icons";
 import { avatarSrc } from "@/lib/avatar";
 import { formatDH } from "@/lib/utils";
@@ -94,7 +95,15 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
           <span className="text-foreground font-medium">{group.name}</span>
         </nav>
         <div className="flex items-end justify-between gap-4">
-          <h1 className="font-extrabold text-[26px] truncate tracking-tight">{group.name}</h1>
+          <div className="flex items-center gap-3 min-w-0">
+            {group.image && (
+              <div className="w-11 h-11 rounded-[16px] overflow-hidden bg-brand-subtle flex items-center justify-center text-brand flex-shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={group.image} alt={group.name} className="w-full h-full object-cover" />
+              </div>
+            )}
+            <h1 className="font-extrabold text-[26px] truncate tracking-tight">{group.name}</h1>
+          </div>
           <div className="text-end flex-shrink-0">
             <div className={`money text-[20px] font-extrabold ${myGroupNet > 0 ? "text-success" : myGroupNet < 0 ? "text-danger" : "text-muted"}`}>
               {myGroupNet > 0 ? "+" : ""}{formatDH(myGroupNet)}
@@ -108,6 +117,27 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
         {outings.length > 0 && (
           <div className="progress-track mt-3 max-w-xs">
             <div className="progress-fill navy" style={{ width: `${Math.round((settledOutings / outings.length) * 100)}%` }} />
+          </div>
+        )}
+        {isOwner && (
+          <div className="mt-5 max-w-md">
+            <details className="rounded-[20px] border border-border p-4">
+              <summary className="flex items-center gap-2 text-[14px] font-medium cursor-pointer text-muted">
+                <IconChevronRight size={13} className="chev" />{t("imageLabel")}
+              </summary>
+              <div className="mt-4">
+                <GroupImageForm
+                  groupId={id}
+                  currentImage={group.image}
+                  displayName={group.name}
+                  uploadLabel={t("imageUpload")}
+                  changeLabel={t("imageChange")}
+                  removeLabel={t("imageRemove")}
+                  hint={t("imageHint")}
+                  saveLabel={tc("save")}
+                />
+              </div>
+            </details>
           </div>
         )}
         <div className="divider mt-6"></div>
