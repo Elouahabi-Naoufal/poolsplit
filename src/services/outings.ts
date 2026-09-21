@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { logEvent } from "@/server/audit";
 import { getGroupMemberPerms } from "@/server/groups/permissions";
 import { generateGroupPublicToken } from "@/lib/utils";
-import { activityResponsibility, computeMemberBalances, type ActivityStatsInput } from "./stats";
+import { activityResponsibility, activityPaid, computeMemberBalances, type ActivityStatsInput } from "./stats";
 import { fail, ok, type ServiceResult } from "./types";
 
 export type OutingSummary = {
@@ -131,6 +131,9 @@ export type OutingDetail = {
   outing: { id: string; name: string; status: string; date: string; createdAt: string; groupId: string; group: { id: string; name: string } };
   myRole: string;
   canManageOutings: boolean;
+  myBalanceCentimes: number;
+  totalSpentCentimes: number;
+  totalPaidCentimes: number;
   participants: { userId: string; displayName: string; publicId: string; isPayer: boolean; outset: number }[];
   activities: {
     id: string;
@@ -139,6 +142,9 @@ export type OutingDetail = {
     status: string;
     productsCount: number;
     totalCentimes: number;
+    paidCentimes: number;
+    myNetCentimes: number;
+    paidBy: string | null;
     participantCount: number;
   }[];
 };
@@ -191,6 +197,9 @@ export async function getOutingDetail(
     },
     myRole: participant.role,
     canManageOutings: !!groupPerms?.canManageOutings,
+    myBalanceCentimes: balanceMap.get(userId)?.netBalance ?? 0,
+    totalSpentCentimes: activities.reduce((s, a) => s + activityResponsibility(a as ActivityStatsInput), 0),
+    totalPaidCentimes: activities.reduce((s, a) => s + activityPaid(a as ActivityStatsInput), 0),
     participants: participants.map(p => ({
       userId: p.userId,
       displayName: p.user.displayName,
@@ -198,15 +207,25 @@ export async function getOutingDetail(
       isPayer: payerIds.has(p.userId),
       outset: balanceMap.get(p.userId)?.netBalance ?? 0,
     })),
-    activities: activities.map(a => ({
-      id: a.id,
-      name: a.name,
-      pricingModel: a.pricingModel,
-      status: a.status,
-      productsCount: a.products.length,
-      totalCentimes: activityResponsibility(a as ActivityStatsInput),
-      participantCount: a.members.length,
-    })),
+    activities: activities.map(a => {
+      const actBalances = computeMemberBalances(
+        participants.map(p => ({ userId: p.userId, user: p.user })),
+        [a as ActivityStatsInput]
+      );
+      const topPayer = [...actBalances].sort((x, y) => y.totalPaid - x.totalPaid)[0];
+      return {
+        id: a.id,
+        name: a.name,
+        pricingModel: a.pricingModel,
+        status: a.status,
+        productsCount: a.products.length,
+        totalCentimes: activityResponsibility(a as ActivityStatsInput),
+        paidCentimes: activityPaid(a as ActivityStatsInput),
+        myNetCentimes: actBalances.find(b => b.userId === userId)?.netBalance ?? 0,
+        paidBy: topPayer && topPayer.totalPaid > 0 ? topPayer.displayName : null,
+        participantCount: a.members.length,
+      };
+    }),
   });
 }
 

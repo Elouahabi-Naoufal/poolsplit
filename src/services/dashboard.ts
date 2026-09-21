@@ -19,6 +19,10 @@ export interface DashboardGroupSummary {
   status: string;
   memberCount: number;
   joinedAt: Date;
+  myNetCentimes: number;
+  outingCount: number;
+  settledCount: number;
+  expenseTotalCentimes: number;
 }
 
 export interface DashboardInvitation {
@@ -147,15 +151,58 @@ export async function getDashboardService(userId: string): Promise<DashboardResu
     : [];
   const memberCountMap = new Map(memberCounts.map(m => [m.groupId, m._count]));
 
-  const myGroups: DashboardGroupSummary[] = memberships.map(m => ({
-    id: m.group.id,
-    name: m.group.name,
-    description: m.group.description,
-    image: m.group.image,
-    status: m.group.status,
-    memberCount: memberCountMap.get(m.group.id) ?? 0,
-    joinedAt: m.joinedAt,
-  }));
+  // Per-group financial + outing stats (mirrors the web dashboard computation).
+  const allGroupOutings = myGroupIds.length > 0
+    ? await prisma.outing.findMany({
+        where: { groupId: { in: myGroupIds } },
+        include: { _count: { select: { participants: true } } },
+        orderBy: { createdAt: "desc" },
+      })
+    : [];
+  const allGroupOutingIds = allGroupOutings.map(o => o.id);
+  const groupActivities: DashboardActivity[] = allGroupOutingIds.length > 0
+    ? await prisma.activity.findMany({
+        where: { outingId: { in: allGroupOutingIds } },
+        include: dashboardActivityInclude,
+      })
+    : [];
+  const outingActivityMap = new Map<string, DashboardActivity[]>();
+  for (const a of groupActivities) {
+    if (!a.outingId) continue;
+    const list = outingActivityMap.get(a.outingId) ?? [];
+    list.push(a);
+    outingActivityMap.set(a.outingId, list);
+  }
+  const groupOutingCount = new Map<string, number>();
+  const groupSettledCount = new Map<string, number>();
+  for (const o of allGroupOutings) {
+    groupOutingCount.set(o.groupId, (groupOutingCount.get(o.groupId) ?? 0) + 1);
+    if (o.status === "SETTLED") groupSettledCount.set(o.groupId, (groupSettledCount.get(o.groupId) ?? 0) + 1);
+  }
+
+  const myGroups: DashboardGroupSummary[] = memberships.map(m => {
+    let expenseTotal = 0, myPaid = 0, myResp = 0;
+    for (const o of allGroupOutings.filter(x => x.groupId === m.group.id)) {
+      for (const a of outingActivityMap.get(o.id) ?? []) {
+        expenseTotal += activityTotal(a);
+        myPaid += a.payments.filter(p => p.userId === userId).reduce((s, p) => s + p.amountCentimes, 0);
+        myResp += myResponsibility(a, userId);
+      }
+    }
+    return {
+      id: m.group.id,
+      name: m.group.name,
+      description: m.group.description,
+      image: m.group.image,
+      status: m.group.status,
+      memberCount: memberCountMap.get(m.group.id) ?? 0,
+      joinedAt: m.joinedAt,
+      myNetCentimes: myPaid - myResp,
+      outingCount: groupOutingCount.get(m.group.id) ?? 0,
+      settledCount: groupSettledCount.get(m.group.id) ?? 0,
+      expenseTotalCentimes: expenseTotal,
+    };
+  });
 
   return {
     ok: true,

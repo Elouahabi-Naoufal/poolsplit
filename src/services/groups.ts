@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { generateGroupPublicToken } from "@/lib/utils";
 import { logEvent } from "@/server/audit";
+import { activityResponsibility, computeMemberBalances } from "./stats";
 import fs from "fs";
 import path from "path";
 
@@ -67,7 +68,7 @@ export interface GroupDetail {
     permissions: PermissionsJson;
     user: { id: string; username: string; displayName: string; publicId: string };
   }[];
-  outings: { id: string; name: string; status: string; participantCount: number; createdAt: Date }[];
+  outings: { id: string; name: string; status: string; participantCount: number; createdAt: Date; totalCentimes: number; myNetCentimes: number }[];
 }
 
 export type GroupDetailResult = { ok: true; data: GroupDetail } | ServiceError;
@@ -90,6 +91,38 @@ export async function getGroupService(userId: string, groupId: string): Promise<
       include: { _count: { select: { participants: true } } },
     }),
   ]);
+
+  const outingIds = outings.map(o => o.id);
+  const [outingActivities, outingParticipants] = await Promise.all([
+    outingIds.length > 0
+      ? prisma.activity.findMany({
+          where: { outingId: { in: outingIds } },
+          include: {
+            payments: { select: { userId: true, amountCentimes: true } },
+            usageRecords: { select: { status: true, totalCentimes: true, participants: { select: { userId: true } } } },
+            lineItems: { select: { userId: true, priceCentimes: true } },
+          },
+        })
+      : [],
+    outingIds.length > 0
+      ? prisma.outingParticipant.findMany({
+          where: { outingId: { in: outingIds } },
+          include: { user: { select: { displayName: true } } },
+        })
+      : [],
+  ]);
+  const activityByOuting = new Map<string, typeof outingActivities>();
+  for (const a of outingActivities) {
+    const list = activityByOuting.get(a.outingId!) ?? [];
+    list.push(a);
+    activityByOuting.set(a.outingId!, list);
+  }
+  const participantByOuting = new Map<string, typeof outingParticipants>();
+  for (const p of outingParticipants) {
+    const list = participantByOuting.get(p.outingId) ?? [];
+    list.push(p);
+    participantByOuting.set(p.outingId, list);
+  }
 
   const isOwner = group.ownerId === userId;
 
@@ -118,7 +151,16 @@ export async function getGroupService(userId: string, groupId: string): Promise<
           user: { id: m.userId, username: m.user.username, displayName: m.user.displayName, publicId: m.user.publicId },
         };
       }),
-      outings: outings.map(o => ({ id: o.id, name: o.name, status: o.status, participantCount: o._count.participants, createdAt: o.createdAt })),
+      outings: outings.map(o => {
+        const acts = activityByOuting.get(o.id) ?? [];
+        const total = acts.reduce((s, a) => s + activityResponsibility(a as any), 0);
+        const balances = computeMemberBalances(
+          (participantByOuting.get(o.id) ?? []).map(p => ({ userId: p.userId, user: p.user })),
+          acts as any[]
+        );
+        const mine = balances.find(b => b.userId === userId);
+        return { id: o.id, name: o.name, status: o.status, participantCount: o._count.participants, createdAt: o.createdAt, totalCentimes: total, myNetCentimes: mine?.netBalance ?? 0 };
+      }),
     },
   };
 }
