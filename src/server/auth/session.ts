@@ -1,5 +1,6 @@
 import * as jose from "jose";
 import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // Lazy on purpose: evaluated on first auth use, NOT at import time, so
@@ -45,6 +46,24 @@ export async function verifySession(token: string): Promise<SessionPayload | nul
 export async function getSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("session")?.value;
+  if (!token) return null;
+  return verifySession(token);
+}
+
+export function getBearerToken(req: NextRequest): string | null {
+  const header = req.headers.get("authorization");
+  if (!header?.startsWith("Bearer ")) return null;
+  const token = header.slice("Bearer ".length).trim();
+  return token || null;
+}
+
+/**
+ * Resolve a session from either the browser `session` cookie or an
+ * `Authorization: Bearer <jwt>` header (used by the mobile API clients).
+ * Same JWT payload/secret as the cookie flow — no token migration needed.
+ */
+export async function getSessionFromRequest(req: NextRequest): Promise<SessionPayload | null> {
+  const token = req.cookies.get("session")?.value ?? getBearerToken(req);
   if (!token) return null;
   return verifySession(token);
 }

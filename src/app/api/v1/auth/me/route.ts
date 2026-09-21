@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/server/auth/session";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
-      select: { id: true, username: true, displayName: true, publicId: true },
+      select: { id: true, username: true, displayName: true, publicId: true, isAdmin: true },
     });
 
     if (!user) {
