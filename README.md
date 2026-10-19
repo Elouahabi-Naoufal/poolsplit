@@ -1,249 +1,252 @@
+<a id="readme-top"></a>
+
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![MIT License][license-shield]][license-url]
+[![LinkedIn][linkedin-shield]][linkedin-url]
+
+<br />
 <div align="center">
-  <img src="public/logo.png" alt="PoolSplit" width="80" height="80">
+  <a href="https://github.com/Elouahabi-Naoufal/poolsplit">
+    <img src="public/logo.png" alt="PoolSplit logo" width="80" height="80">
+  </a>
 
-  <h1>PoolSplit</h1>
+  <h3 align="center">PoolSplit</h3>
 
-  **What are we doing this weekend?**
-
-  <p>
-    Find something fun. Invite your people. Make it happen — and settle up without the awkward math.
-  </p>
-
-  <p>
-    <a href="#quick-start">Quick Start</a> •
-    <a href="#deploy-with-dokploy">Deploy (Dokploy)</a> •
-    <a href="#domain-setup">Domain Setup</a> •
-    <a href="#local-development">Local Dev</a> •
-    <a href="#api">API</a> •
-    <a href="#architecture">Architecture</a>
-  </p>
-
-  <p>
-    <img src="https://img.shields.io/github/license/Elouahabi-Naoufal/poolsplit?style=flat&color=blue" alt="MIT">
-    <img src="https://img.shields.io/github/last-commit/Elouahabi-Naoufal/poolsplit?style=flat" alt="Last commit">
-    <img src="https://img.shields.io/github/v/release/Elouahabi-Naoufal/poolsplit?style=flat" alt="Release">
+  <p align="center">
+    Plan group outings, track who paid and who consumed, and settle up without the awkward math.
+    <br />
+    <a href="https://github.com/Elouahabi-Naoufal/poolsplit"><strong>Explore the source »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/Elouahabi-Naoufal/poolsplit/issues/new?labels=bug">Report Bug</a>
+    &middot;
+    <a href="https://github.com/Elouahabi-Naoufal/poolsplit/issues/new?labels=enhancement">Request Feature</a>
   </p>
 </div>
 
----
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#about-the-project">About The Project</a>
+      <ul>
+        <li><a href="#built-with">Built With</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation</a></li>
+      </ul>
+    </li>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#acknowledgments">Acknowledgments</a></li>
+  </ol>
+</details>
 
-## ✨ Features
+## About The Project
 
-| Feature | Description |
-|---------|-------------|
-| **Groups & Outings** | Create groups, plan outings, invite by public ID or QR |
-| **Flexible Expenses** | FIXED (per-unit pricing) or VARIABLE (custom line items) |
-| **Per-Activity Participation** | Not everyone joins every activity — track per-activity |
-| **Contributions ≠ Payments** | Who consumed vs who actually paid tracked separately |
-| **Automatic Settlement** | Debt simplification math — knows who owes whom |
-| **Wallet** | Deposit funds, track balance, contribution history |
-| **Trilingual UI** | English, Français, العربية with full RTL support |
-| **Friendship Modes** | Mixed, Guys, Girls color themes |
-| **Dark Mode** | System-follow or manual toggle |
-| **QR Invites** | Scan to join groups and outings |
-| **Public Settlement Links** | Share settlement results without login |
+PoolSplit is a group expense splitter built around outings and activities rather than one flat
+group ledger. A group is a persistent membership container; an outing is an independent financial
+context inside it; activities are the things people actually spend money on.
 
----
+Core behaviour:
 
-## 🚀 Quick Start
+* **Groups and outings** with invitations by public ID or QR code
+* **Flexible pricing** — fixed per-unit activities or variable line-item expenses
+* **Per-activity participation**, so people who skipped an activity are not charged for it
+* **Contributions and payments tracked separately** — who consumed versus who actually paid
+* **Debt simplification** that computes the minimal set of settlement transfers
+* **Wallet** with deposits, balances and contribution history
+* **Trilingual UI** in English, French and Arabic, with full RTL support
+* **Themes** including light, dark and friendship color modes
+* **Public settlement links** that can be shared without signing in
+* **Correction requests, activity templates, audit events and an admin surface**
 
-### Local Development
+Money is stored as integer centimes throughout, and equal allocation uses a largest-remainder
+method so remainders are distributed one centime at a time.
 
-```bash
-git clone https://github.com/Elouahabi-Naoufal/poolsplit.git
-cd poolsplit
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-cp .env.example .env
-# Generate a secret:
-#   openssl rand -base64 32
+### Built With
 
-npm install
-npx prisma migrate dev
-npx prisma generate
-npm run dev
-# → http://localhost:3000
-```
+* [![Next.js][Next.js]][Next-url]
+* [![React][React.js]][React-url]
+* [![TypeScript][TypeScript]][TypeScript-url]
+* [![Tailwind CSS][TailwindCSS]][TailwindCSS-url]
+* [![Prisma][Prisma]][Prisma-url]
+* [![SQLite][SQLite]][SQLite-url]
+* [![Docker][Docker]][Docker-url]
 
-### Docker (Single VPS)
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-```bash
-git clone https://github.com/Elouahabi-Naoufal/poolsplit.git /opt/poolsplit
-cd /opt/poolsplit
-cp .env.example .env
-# Edit JWT_SECRET in .env
-
-mkdir -p data
-docker compose up --build -d
-# → http://YOUR_VPS_IP:3003
-```
-
-The app ships with a `docker-entrypoint.sh` that:
-- Runs Prisma migrations automatically on startup
-- Enables SQLite **WAL mode** for concurrent reads/writes
-- Drops privileges from root to the `nextjs` user
-- Persists data in a named Docker volume (`hesab-data`)
-
----
-
-## 🏭 Deploy with Dokploy
-
-[Dokploy](https://dokploy.com) is an open-source PaaS that manages Docker Compose deployments via a web UI. It runs on your own VPS and integrates with GitHub, Traefik + Let's Encrypt for automatic SSL.
+## Getting Started
 
 ### Prerequisites
 
-- A VPS (Ubuntu 22+/Debian 12) with Docker installed
-- Dokploy running on your VPS (installed via their install script)
-- A domain name pointing to your VPS IP
-- A GitHub repository containing this project
+* Node.js 20+ and npm
+* SQLite (no separate database server required)
+* Docker and Docker Compose for the containerised deployment
 
-### Step 1: Create a Compose Project in Dokploy
+### Installation
 
-1. Log into your Dokploy dashboard (e.g., `https://dokploy.yourdomain.com`)
-2. Navigate to **Projects** → **New Project**
-3. Give it a name (e.g., "Web Apps")
-4. Inside the project, click **New Compose**
-5. **Source Type**: GitHub
-6. **Repository**: `Elouahabi-Naoufal/poolsplit`
-7. **Branch**: `main`
-8. **Compose Path**: `./docker-compose.yml`
-9. **Auto Deploy**: Enable
+1. Clone the repository
+   ```sh
+   git clone https://github.com/Elouahabi-Naoufal/poolsplit.git
+   cd poolsplit
+   ```
 
-### Step 2: Add Environment Variables
+2. Create the environment file
+   ```sh
+   cp .env.example .env
+   ```
+   Set `JWT_SECRET` to a long random value. `DATABASE_URL` defaults to a local SQLite file.
 
-In the Dokploy compose settings, add these environment variables:
+3. Install dependencies
+   ```sh
+   npm install
+   ```
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `JWT_SECRET` | `openssl rand -base64 32` | Session signing key |
-| `NODE_ENV` | `production` | Production mode |
+4. Create the database and generate the Prisma client
+   ```sh
+   npx prisma migrate dev
+   npx prisma generate
+   ```
 
-Dokploy writes these into a `.env` file next to `docker-compose.yml`. The DATABASE_URL is already hardcoded in the compose file (`file:/app/data/app.db`), and data persists in a named volume.
+5. Optionally seed development data
+   ```sh
+   npm run seed
+   ```
 
-### Step 3: Deploy
+6. Start the development server
+   ```sh
+   npm run dev
+   ```
 
-Click **Deploy**. Dokploy will:
-1. Clone the repo
-2. Build the Docker image (multi-stage, ~2-3 min)
-3. Start the container
-4. The app is now running on an internal port behind Traefik
+7. Open <http://localhost:3000>
 
----
-
-## 🌐 Domain Setup
-
-PoolSplit runs behind **Traefik** (shipped with Dokploy). To connect your domain:
-
-### Option A: Dokploy Domain Tab (Recommended)
-
-1. In Dokploy, open your compose → **Domains** tab
-2. Click **New Domain**
-3. Enter your domain: `poolsplit.yourdomain.com`
-4. Dokploy auto-configures Traefik and provisions a Let's Encrypt SSL certificate
-5. **Propagation**: Wait 5-10 minutes for DNS
-
-### Option B: Manual Traefik (Standalone Deploy)
-
-If you're not using Dokploy but running Traefik separately, add a file provider config:
-
-```yaml
-# /etc/traefik/dynamic/poolsplit.yml
-http:
-  routers:
-    poolsplit:
-      rule: "Host(`poolsplit.yourdomain.com`)"
-      service: poolsplit
-      tls:
-        certResolver: letsencrypt
-  services:
-    poolsplit:
-      loadBalancer:
-        servers:
-          - url: "http://HOMESERVER_LAN_IP:3003"
+Docker:
+```sh
+mkdir -p data
+docker compose up --build -d
 ```
+The compose stack exposes the app on port `3003`, applies migrations on startup, enables SQLite
+WAL mode and persists data in the `hesab-data` named volume.
 
-Then point your DNS `A` record to your VPS IP and Traefik handles the rest.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### DNS Records
+## Usage
 
-| Type | Name | Value |
-|------|------|-------|
-| A | `poolsplit` | `YOUR_VPS_IP` |
-| A | `dokploy` | `YOUR_VPS_IP` (for admin dashboard) |
+1. Register an account and create a group.
+2. Invite members by public ID or QR code.
+3. Create an outing inside the group, then add activities to it.
+4. Choose a fixed per-unit model or add variable line items, and record who participated.
+5. Record who contributed or paid, and deposit funds into the wallet when needed.
+6. Finalize the outing to calculate settlement transfers, confirm them, and share the public
+   settlement link if desired.
+7. Use the language switcher for English, French or Arabic; the Arabic locale renders RTL.
 
----
+Useful commands:
 
-## 🏗 Architecture
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm start` | Start the production build |
+| `npm run lint` | ESLint |
+| `npm test` | Vitest suite |
+| `npm run test:e2e` | End-to-end flow script |
+| `npm run seed` | Seed development data |
 
-```
-src/
-├── app/              # Next.js App Router pages
-│   ├── [locale]/     # Localized routes (en, fr, ar)
-│   └── api/          # API routes (auth, join)
-├── components/       # React components (AppShell, icons, theme toggles)
-├── domain/           # Pure business logic (money, settlement, allocation)
-├── lib/              # Prisma client, utilities, avatar helpers
-├── server/           # Server actions (auth, groups, outings, activities, wallet)
-│   ├── auth/         # Login, register, session
-│   ├── groups/       # Group CRUD, invitations
-│   ├── outings/      # Outing lifecycle
-│   ├── activities/   # Activity CRUD
-│   ├── payments/     # Payment recording
-│   ├── settlement/   # Finalize / recalculate / confirm transfers
-│   └── wallet/       # Deposit, transaction history
-└── i18n/             # Internationalization config
-```
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Key Design Decisions
+## Roadmap
 
-- **SQLite + WAL**: Zero external dependencies. A single `app.db` file, backed up with `cp`. WAL mode enables concurrent reads during writes.
-- **Integer Centimes**: All money is `Int` (centimes). 100 DH = 10,000 centimes. No floating point anywhere.
-- **Server Actions over API Routes**: Next.js server actions for mutations (type-safe, no extra HTTP layer). REST API routes only for public endpoints (join, auth check).
-- **Deterministic Rounding**: `allocateEqual` distributes remainders 1 centime at a time (Largest Remainder Method). The system is provably fair.
+- [x] Groups, outings, invitations and QR joins
+- [x] Fixed and variable activity pricing with per-activity participation
+- [x] Contributions, payments, wallet and settlement simplification
+- [x] English, French and Arabic UI with RTL support
+- [x] Public settlement links and admin views
+- [x] Docker deployment with automatic migrations and persistent storage
+- [ ] Expand automated coverage around settlement and wallet edge cases
+- [ ] Add a documented scheduled backup routine on top of `scripts/backup.sh`
 
----
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## 📋 Environment Variables
+## Contributing
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_URL` | Yes | `file:/app/data/app.db` | SQLite path (absolute for Docker) |
-| `JWT_SECRET` | Yes | — | 32+ char random string for session signing |
-| `PORT` | No | `3003` | HTTP listen port |
-| `NODE_ENV` | No | `production` | `development` / `production` |
+Contributions are what make the open source community such an amazing place to learn, inspire,
+and create. Any contributions you make are **greatly appreciated**.
 
----
-
-## 🔧 Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | [Next.js 16](https://nextjs.org/) (App Router, Turbopack) |
-| UI | [React 19](https://react.dev/), [Tailwind 4](https://tailwindcss.com/) |
-| Database | [SQLite](https://sqlite.org/) (WAL mode) via [Prisma 5](https://prisma.io) |
-| Auth | [bcryptjs](https://github.com/dcodeIO/bcrypt.js) + [jose](https://github.com/panva/jose) (JWT) |
-| Validation | [Zod](https://zod.dev/) |
-| i18n | [next-intl](https://next-intl.dev/) (en, fr, ar, RTL) |
-| Container | [Docker](https://docker.com/) (multi-stage, 105MB final image, distroless-like) |
-| Deployment | [Dokploy](https://dokploy.com/) (open-source PaaS) |
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feat/amazing`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feat/amazing`)
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
----
+### Top contributors:
 
-## 📄 License
+<a href="https://github.com/Elouahabi-Naoufal/poolsplit/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Elouahabi-Naoufal/poolsplit" alt="contrib.rocks image" />
+</a>
 
-Distributed under the **MIT License**. See `LICENSE` for more information.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
----
+## License
 
-<div align="center">
-  <sub>Built with ❤️ by <a href="https://github.com/Elouahabi-Naoufal">Naoufal El Ouahabi</a></sub>
-</div>
+Distributed under the MIT License. See `LICENSE` for more information.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Contact
+
+Naoufal Elouahabi - [LinkedIn](https://www.linkedin.com/in/elouahabi-naoufal/) - elouahabi-naoufal1@gmail.com
+
+Project Link: [https://github.com/Elouahabi-Naoufal/poolsplit](https://github.com/Elouahabi-Naoufal/poolsplit)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Acknowledgments
+
+* [Next.js](https://nextjs.org/)
+* [Prisma](https://www.prisma.io/)
+* [next-intl](https://next-intl.dev/)
+* [Best-README-Template](https://github.com/othneildrew/Best-README-Template)
+* [Img Shields](https://shields.io)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+[contributors-shield]: https://img.shields.io/github/contributors/Elouahabi-Naoufal/poolsplit.svg?style=for-the-badge
+[contributors-url]: https://github.com/Elouahabi-Naoufal/poolsplit/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/Elouahabi-Naoufal/poolsplit.svg?style=for-the-badge
+[forks-url]: https://github.com/Elouahabi-Naoufal/poolsplit/network/members
+[stars-shield]: https://img.shields.io/github/stars/Elouahabi-Naoufal/poolsplit.svg?style=for-the-badge
+[stars-url]: https://github.com/Elouahabi-Naoufal/poolsplit/stargazers
+[issues-shield]: https://img.shields.io/github/issues/Elouahabi-Naoufal/poolsplit.svg?style=for-the-badge
+[issues-url]: https://github.com/Elouahabi-Naoufal/poolsplit/issues
+[license-shield]: https://img.shields.io/github/license/Elouahabi-Naoufal/poolsplit.svg?style=for-the-badge
+[license-url]: https://github.com/Elouahabi-Naoufal/poolsplit/blob/main/LICENSE
+[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
+[linkedin-url]: https://www.linkedin.com/in/elouahabi-naoufal/
+[Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
+[Next-url]: https://nextjs.org/
+[React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
+[React-url]: https://react.dev/
+[TypeScript]: https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white
+[TypeScript-url]: https://www.typescriptlang.org/
+[TailwindCSS]: https://img.shields.io/badge/Tailwind%20CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white
+[TailwindCSS-url]: https://tailwindcss.com/
+[Prisma]: https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white
+[Prisma-url]: https://www.prisma.io/
+[SQLite]: https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white
+[SQLite-url]: https://www.sqlite.org/
+[Docker]: https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white
+[Docker-url]: https://www.docker.com/
