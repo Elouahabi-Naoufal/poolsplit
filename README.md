@@ -250,3 +250,5 @@ Project Link: [https://github.com/Elouahabi-Naoufal/poolsplit](https://github.co
 [SQLite-url]: https://www.sqlite.org/
 [Docker]: https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white
 [Docker-url]: https://www.docker.com/
+
+<!-- Deploy webhook test: 2026-11-26 -->
